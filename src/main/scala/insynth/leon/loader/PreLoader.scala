@@ -21,7 +21,7 @@ object PreLoader extends ( (Boolean) => List[Declaration] ) {
     list += getAnd
     list += getNot
     
-    list += getLessThan    
+    list += getLessEquals
     list ++= getEquals(supportedBaseTypes)
     
     if (loadArithmeticOps)

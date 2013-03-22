@@ -32,6 +32,12 @@ object DeclarationFactory {
     Declaration(expression, inSynthType, leonType)    
   }
   
+  def makeArgumentDeclaration(id: Identifier) = {
+    val leonType = id.getType
+    val inSynthType = TypeTransformer(leonType)
+    Declaration(ImmediateExpression(id, Variable(id)), inSynthType, leonType)    
+  }
+  
   def makeArgumentDeclaration(varDecl: VarDecl) = {
     val leonType = varDecl.getType
     val inSynthType = TypeTransformer(leonType)
