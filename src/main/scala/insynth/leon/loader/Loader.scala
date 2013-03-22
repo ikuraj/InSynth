@@ -11,7 +11,8 @@ import leon.purescala.Trees.{ Hole, Expr, FunctionInvocation, _ }
 import leon.purescala.Common.{ Identifier }
 import leon.purescala.Definitions.{ AbstractClassDef, CaseClassDef, ClassTypeDef }
 
-case class LeonLoader(program: Program, hole: Hole, loadArithmeticOps: Boolean = true) extends Loader with HasLogger {  
+case class LeonLoader(program: Program, hole: Hole,
+  variables: List[Identifier], loadArithmeticOps: Boolean = true) extends Loader with HasLogger {  
   //var temporaryDesiredType: LeonType = Int32Type
   
   lazy val classMap: Map[Identifier, ClassType] = extractClasses
@@ -19,15 +20,15 @@ case class LeonLoader(program: Program, hole: Hole, loadArithmeticOps: Boolean =
   lazy val directSubclassesMap: Map[ClassType, Set[ClassType]] = initializeSubclassesMap(program)
   
   // arguments + all found variables in the hole function
-  lazy val variableDeclarations: Seq[Declaration] = initResults._2
+  lazy val variableDeclarations: Seq[Declaration] = variables.map(DeclarationFactory.makeArgumentDeclaration(_))
   
-  lazy val holeDef = initResults._3
+  //lazy val holeDef = initResults._3
   
   lazy val initResults = init
   
   import DeclarationFactory._
         
-  def load: List[Declaration] = initResults._1
+  def load: List[Declaration] = initResults
   
   private def init = {      
 
@@ -60,14 +61,19 @@ case class LeonLoader(program: Program, hole: Hole, loadArithmeticOps: Boolean =
     
     list ++= extractClassDependentDeclarations
     
-    new HoleExtractor(program, hole).extractHole match {
-      case Some((holeDef, decls)) =>
-        list ++= decls
-                  
-        (list.toList, decls, holeDef)
-      case _ =>
-        throw new RuntimeException("Hole extractor problem")
-    }     
+    list ++= variableDeclarations
+    
+    list.toList
+    
+    // no need for doing this (we will have everything from the synthesis problem context)
+//    new HoleExtractor(program, hole).extractHole match {
+//      case Some((holeDef, decls)) =>
+//        list ++= decls
+//                  
+//        (list.toList, decls, holeDef)
+//      case _ =>
+//        throw new RuntimeException("Hole extractor problem")
+//    }     
   }
     
   def initializeSubclassesMap(program: Program) = {  

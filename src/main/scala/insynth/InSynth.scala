@@ -23,8 +23,8 @@ import insynth.util.logging.HasLogger
  */
 class InSynth(declarations: List[Declaration], goalType: Type, ordered: Boolean = true) extends HasLogger {
   
-  def this(program: Program, hole: Hole, ordered: Boolean) =
-    this(new LeonLoader(program, hole).load, hole.getType, ordered)
+//  def this(program: Program, hole: Hole, ordered: Boolean) =
+//    this(new LeonLoader(program, hole).load, hole.getType, ordered)
     
   def this(loader: LeonLoader, ordered: Boolean) =
     this(loader.load, loader.hole.getType, ordered)
@@ -62,8 +62,8 @@ object InSynth {
   def apply(declarations: List[Declaration], goalType: Type, ordered: Boolean) =
     new InSynth(declarations, goalType, ordered)
   
-  def apply(program: Program, hole: Hole, ordered: Boolean) =
-    new InSynth(new LeonLoader(program, hole).load, hole.getType, ordered)
+//  def apply(program: Program, hole: Hole, ordered: Boolean) =
+//    new InSynth(new LeonLoader(program, hole).load, hole.getType, ordered)
     
   def apply(loader: LeonLoader, ordered: Boolean) =
     new InSynth(loader.load, loader.hole.getType, ordered)
