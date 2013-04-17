@@ -16,11 +16,11 @@ object ZeroLoggerFactory {
   val loggerMap: MutableMap[String, Logged] = MutableMap.empty
   
   final def newLogger(className: String) =
-    if (className.contains("lesynth"))
-    	(Filter.Finest, new SimpleFormatter(className) with ConsoleLogger)
-    else 
+//    if (className.contains("lesynth"))
+//    	(Filter.Off, new SimpleFormatter(className) with ConsoleLogger)
+//    else 
 	if (className.contains("lesynth.Synthesizer"))
-    	(Filter.Finest, new SimpleFormatter(className) with ConsoleLogger)
+    	(Filter.Fine, new SimpleFormatter(className) with ConsoleLogger)
     else
     	(Filter.Off, new SimpleFormatter(className) with ConsoleLogger)
 
