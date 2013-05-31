@@ -21,7 +21,7 @@ object PreLoader extends ( (Boolean) => List[Declaration] ) {
     list += getAnd
     list += getNot
     
-    //list += getLessEquals
+    list += getLessEquals
     list += getLessThan
     list += getGreaterThan
     list ++= getEquals(supportedBaseTypes)
