@@ -20,7 +20,7 @@ object ZeroLoggerFactory {
 //    	(Filter.Off, new SimpleFormatter(className) with ConsoleLogger)
 //    else 
 	if (className.contains("lesynth.Synthesizer"))
-    	(Filter.Fine, new SimpleFormatter(className) with ConsoleLogger)
+    	(Filter.Info, new SimpleFormatter(className) with ConsoleLogger)
     else
     	(Filter.Off, new SimpleFormatter(className) with ConsoleLogger)
 
