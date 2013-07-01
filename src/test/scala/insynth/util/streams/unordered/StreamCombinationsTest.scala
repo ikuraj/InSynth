@@ -76,7 +76,7 @@ class StreamCombinationsTest {
     }
     
     assertTrue("ResultMap: " + resultMap.mkString(", "), resultMap.values.count(_ != 0) < 3)
-    assertTrue("ResultMap: " + resultMap.mkString(", "), (0 /: resultMap.values.filter(_ != 0)) { _ + Math.abs(_) } < 3)
+    assertTrue("ResultMap: " + resultMap.mkString(", "), (0 /: resultMap.values.filter(_ != 0)) { _ + math.abs(_) } < 3)
     
   }
 
