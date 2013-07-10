@@ -6,36 +6,27 @@ import insynth.util.logging.HasLogger
 import insynth.util.streams.ordered.{ OrderedSizeStreamable => Streamable }
 import insynth.util.streams.unordered.{ RoundRobbin => UnRoundRobbin }
 
-class RoundRobbin[T] protected[streams] (override val streams: Seq[Streamable[T]], name: String)
+class CareRoundRobbin[T] protected[streams] (override val streams: Seq[Streamable[T]], name: String = "nebitno")
 	extends UnRoundRobbin(streams) with Streamable[T] with HasLogger {
   
-  // iterators that track the positions in each stream
-  // hidden so it looks as functional
-  //private lazy val valueIterators: Seq[BufferedIterator[Int]] = streams map { _.getValues.iterator.buffered }
+  assert(streams.exists(! _.isInfinite), "streams.exists(! _.isInfinite)")
+  val (infStreams, finStreams) = streams.partition(_.isInfinite)
   
-  private var _valueIterators: MutableSeq[BufferedIterator[Int]] = MutableSeq.fill(streams.size)(null)
-   
-  val valueIteratorsSize = streams.size
-  protected def valueIterators(ind: Int) = {
-    if (_valueIterators(ind) == null) {
-      _valueIterators(ind) = streams(ind).getValues.iterator.buffered 
-    }
-    _valueIterators(ind)
-  }
+  override def isInfinite = false
   
-  // NOTE keeps fairness
-  private def getNextIndex(currentInd: Int) = {
-    //entering("getNextIndex", currentInd.toString)
+//  var innerRoundRobbin: RoundRobbin[T] = _
+  
+  private def getMinIndex = {
+		val valueIterators = finStreams map { _.getValues.iterator.buffered }
+    
     var min = Int.MaxValue
     var minInd = -1
     var ind = 0
-    while (ind < valueIteratorsSize) {
-      val indToCheck = (currentInd + ind) % valueIteratorsSize
+    while (ind < valueIterators.size) {
+      val indToCheck = ind % valueIterators.size
+  		fine("getMinIndex in CaseRoundRobbin, indToCheck=" + indToCheck)
       
-      fine("checking index: " + indToCheck + ", valueIterators(indToCheck).hasNext: " + valueIterators(indToCheck).hasNext)
-      if (valueIterators(indToCheck).hasNext) fine("valueIterators(indToCheck).head: " + valueIterators(indToCheck).head)
       if (valueIterators(indToCheck).hasNext && valueIterators(indToCheck).head < min) {
-      	fine("index passed: " + indToCheck + ", value: " + valueIterators(indToCheck).head)
       	min = valueIterators(indToCheck).head
   			minInd = indToCheck
       }        
@@ -43,55 +34,48 @@ class RoundRobbin[T] protected[streams] (override val streams: Seq[Streamable[T]
       ind += 1
     }
     
-    exiting("getNextIndex", (min, minInd).toString)
+    assert(minInd > -1, "minInd > -1")
+    exiting("getMinIndex", (min, minInd).toString)
     (min, minInd)
   }
-//    valueIterators.zipWithIndex filter { _._1.hasNext } map { p => (p._1.next, p._2) } min
-//    	{ Ordering[Int].on[(Int, _)](_._1) }
   
-  // stream value, store it in order to use memoization of previously computed elements
-  protected lazy val streamWithValues = {      
-    // inner function which "produces" new elements
-    // TODO wow a bug found due to the name!?
-    def loopXXX(index: Int): Stream[(T, Int)] = {
-  		//entering(this.getClass.getName, "loop:" + this.getName, index)
-  		
-      // check if there is at least one iterator with next element
-  		getNextIndex(index) match {
-  		  case (nextValue, nextIndex) if nextIndex > -1 =>
-  		    // forward the value iterator
-  		    valueIterators(nextIndex).next
-			    // prepend the element to a recursively computed stream
-			  	(iterators(nextIndex).next, nextValue) #:: loopXXX((index + 1) % streams.size)
-  		  case _ =>
-				  // no iterator has next, return empty stream
-				  Stream.empty  		    
-  		}
-    }
-			  
-	  // start with first iterator
-    loopXXX(0)
+  lazy val (minValue, minInd) = getMinIndex
+  
+  lazy val mappedFinStreams = finStreams.zipWithIndex map {
+    p =>
+    	if (p._2 == minInd)
+    	  SingleStream((p._1.getStream zip p._1.getValues).tail, p._1.isInfinite)
+  	  else p._1
   }
+    
+  lazy val innerRoundRobbin = {
+//    throw new RuntimeException
+    RoundRobbin[T](mappedFinStreams ++ infStreams, name + " fromCare")
+  }
+//  private def produceRoundRobbin = {
+//    if (innerRoundRobbin == null)
+//    	innerRoundRobbin = RoundRobbin[T](mappedFinStreams ++ infStreams)
+//  	innerRoundRobbin
+//  } 
   
+  override lazy val stream = finStreams(minInd).getStream.head #:: innerRoundRobbin.getStream
+ 
   override def getStream = {
-    fine("getStream RoundRobbin")
-    streamWithValues map { _._1 }
+    fine("getStream CareRoundRobbin")
+    stream
   }
   
-  override def getValues = {
+  override def getValues =  {
     fine("getValues LazyRoundRobbin")
-    streamWithValues map { _._2 }
+    minValue #:: innerRoundRobbin.getValues
   }
   
   override def toString = name
 }
 
-object RoundRobbin {
-  def apply[T](streamsIn: => Seq[Streamable[T]], name: String = "RoundRobDef") = {
-//    assert(streams.forall(!_.isInfinite))
-//  	val streams = streamsIn.sortWith(!_.isInfinite && _.isInfinite)
-  	
-    new RoundRobbin(streamsIn, name: String)
+object CareRoundRobbin {
+  def apply[T](streams: => Seq[Streamable[T]], name: String = "RoundRobbinDef") = {
+    new CareRoundRobbin(streams, name: String)
   }
 }
 
