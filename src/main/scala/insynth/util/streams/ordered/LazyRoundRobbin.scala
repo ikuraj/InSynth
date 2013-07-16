@@ -4,22 +4,16 @@ import insynth.util.streams.{ Streamable, AddStreamable }
 
 import insynth.util.logging.HasLogger
 
-class LazyRoundRobbin[T](val initStreamsIn: List[OrderedSizeStreamable[T]], name: String = "nebitnoLaz")
+class LazyRoundRobbin[T](val initStreams: List[OrderedSizeStreamable[T]])
 	extends OrderedSizeStreamable[T] with AddStreamable[T] with HasLogger {
-  
-  val initStreams = initStreamsIn.sortWith(!_.isInfinite && _.isInfinite)
-  
-  assert(!initStreams.isEmpty)
+  if (initStreams.isEmpty)
+    println("creating initStreams is empty!!!")
   
   var initialized = false
       
   var streams: List[OrderedSizeStreamable[T]] = List.empty
   
-  override def getStreams = {
-    assert(initialized, "initialized")
-//    assert(streams.size > 1, "streams.size > 1")
-    initStreams ++ streams
-  }
+  override def getStreams = streams
     
   var innerRoundRobbin: RoundRobbin[T] = _
   
@@ -34,9 +28,8 @@ class LazyRoundRobbin[T](val initStreamsIn: List[OrderedSizeStreamable[T]], name
   override def isInitialized = initialized
   
   override def isInfinite = 
-//    if (initialized)
-      initStreams.exists( _.isInfinite )//innerRoundRobbin.isInfinite
-//    else throw new RuntimeException    
+    if (initialized) initStreams.exists( _.isInfinite )//innerRoundRobbin.isInfinite
+    else false
       
   private def getMinIndex = {
     
@@ -72,7 +65,7 @@ class LazyRoundRobbin[T](val initStreamsIn: List[OrderedSizeStreamable[T]], name
     
   private def produceRoundRobbin = {
     if (innerRoundRobbin == null)
-    	innerRoundRobbin = RoundRobbin[T](mappedInitStreams ++ streams, name + " from LazyRound")
+    	innerRoundRobbin = RoundRobbin[T]((mappedInitStreams ++ streams).toSeq)
   	innerRoundRobbin
   } 
   
@@ -88,27 +81,20 @@ class LazyRoundRobbin[T](val initStreamsIn: List[OrderedSizeStreamable[T]], name
     else Stream.empty    
   
   override def getStream = {
-    fine("getStream LazyRoundRobbin")
     info("initialized " + initialized)
-    assert(initialized)
     
     if (initialized) stream
     else Stream.Empty
   }
   
-  override def getValues = {
-    fine("getValues LazyRoundRobbin")
+  override def getValues = 
     if (initialized && minInd > -1) {
       assert(minInd > -1)
       minValue #:: produceRoundRobbin.getValues
     }
     else Stream.Empty
-  }
-    
-  override def toString = name
 }
 
 object LazyRoundRobbin {
-	def apply[T](initStreams: List[OrderedSizeStreamable[T]], name: String = "LazyDef") =
-	  new LazyRoundRobbin(initStreams, name)
+	def apply[T](initStreams: List[OrderedSizeStreamable[T]]) = new LazyRoundRobbin(initStreams)
 }

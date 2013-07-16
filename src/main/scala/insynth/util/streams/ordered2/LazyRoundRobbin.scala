@@ -9,8 +9,8 @@ class LazyRoundRobbin[T](val initStreamsIn: List[OrderedSizeStreamable[T]], name
     if (initialized) innerRoundRobbin.depleted
     else false
     
-  override def nextReady: Boolean = 
-    if (initialized) innerRoundRobbin.nextReady
+  override def nextReady(ind: Int): Boolean = 
+    if (initialized) innerRoundRobbin.nextReady(ind)
     else false
   
   var initialized = false

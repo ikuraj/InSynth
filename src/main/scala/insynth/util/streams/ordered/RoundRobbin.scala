@@ -6,8 +6,10 @@ import insynth.util.logging.HasLogger
 import insynth.util.streams.ordered.{ OrderedSizeStreamable => Streamable }
 import insynth.util.streams.unordered.{ RoundRobbin => UnRoundRobbin }
 
-class RoundRobbin[T] protected[streams] (override val streams: Seq[Streamable[T]], name: String)
+class RoundRobbin[T](override val streams: Seq[Streamable[T]])
 	extends UnRoundRobbin(streams) with Streamable[T] with HasLogger {
+    
+  //override protected lazy val stream = { 
   
   // iterators that track the positions in each stream
   // hidden so it looks as functional
@@ -73,26 +75,13 @@ class RoundRobbin[T] protected[streams] (override val streams: Seq[Streamable[T]
     loopXXX(0)
   }
   
-  override def getStream = {
-    fine("getStream RoundRobbin")
-    streamWithValues map { _._1 }
-  }
+  override def getStream = streamWithValues map { _._1 }
   
-  override def getValues = {
-    fine("getValues LazyRoundRobbin")
-    streamWithValues map { _._2 }
-  }
-  
-  override def toString = name
+  override def getValues = streamWithValues map { _._2 }
 }
 
 object RoundRobbin {
-  def apply[T](streamsIn: => Seq[Streamable[T]], name: String = "RoundRobDef") = {
-//    assert(streams.forall(!_.isInfinite))
-//  	val streams = streamsIn.sortWith(!_.isInfinite && _.isInfinite)
-  	
-    new RoundRobbin(streamsIn, name: String)
-  }
+  def apply[T](streams: => Seq[Streamable[T]]) = new RoundRobbin(streams)
 }
 
 //class InitializingRoundRobin[T](val initStreams: List[Streamable[T]])

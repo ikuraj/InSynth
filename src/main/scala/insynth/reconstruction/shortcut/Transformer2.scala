@@ -11,13 +11,14 @@ import scala.collection.mutable.{
 import insynth.reconstruction.{ stream => lambda }
 import insynth.reconstruction.stream._
 import insynth.{ structures => env }
+import insynth.leon.LeonDeclaration
 import insynth.structures.{ SimpleNode, ContainerNode }
 import insynth.interfaces.Declaration
 import insynth.util.logging.HasLogger
 import insynth.util.FreshNameGenerator
 import insynth.util.format._
-import insynth.util.streams._
-import insynth.util.streams.ordered.OrderedSizeStreamable
+import insynth.util.streams.ordered2._
+import insynth.util.streams.ordered2.{ OrderedSizeStreamable => Streamable }
 
 // dependencies on the domain language
 import insynth.leon.{ LeonDeclaration => DomainDeclaration }
@@ -30,10 +31,10 @@ import leon.purescala.{ TypeTrees => domain }
  * object which transforms the InSynth tree into an intermediate representation
  * tree
  */
-class Transformer(streamBuilderXXX: StreamFactory[Node])
+class Transformer2(streamBuilderXXX: StreamFactory[Node])
 	extends (env.SimpleNode => Stream[(lambda.Node, Float)]) with HasLogger {
   
-  val streamBuilder = new DebugOrderedStreamFactory[Node]
+  val streamBuilder = new DebugOrderedStreamFactory2[Node]
   
   // set the types according to which we are conforming our abstract language
   type DomainType = TypeTree
@@ -77,15 +78,17 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
     // after the transform, add recursive edges
     postProcess
 
-    println("transformed streamable:\n" + FormatStreamUtils.apply((transformed), 10).toString)
+//    val file = new java.io.PrintWriter(new java.io.FileOutputStream("streamable.txt"))
+//    file.println("transformed streamable:\n" + FormatStreamUtils2.apply((transformed)/*, 10*/).toString)
+//    file.flush()
     
     transformed match {
       case os: OrderedSizeStreamable[_] =>
         fine("returning ordered streamable")
         os.getStream zip os.getValues.map(_.toFloat)
-      case _: Streamable[_] =>
-        fine("returning unordered streamable")
-        transformed.getStream zip Stream.continually(0f)
+//      case _: Streamable[_] =>
+//        fine("returning unordered streamable")
+//        transformed.getStream zip Stream.continually(0f)
     }
   }
 
@@ -152,9 +155,9 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
               case Nil => streamBuilder.makeSingletonList(Nil)
               case List(stream) => streamBuilder.makeUnaryStreamList(stream, { el: lambda.Node => List(el) })
               case stream1 :: stream2 :: rest =>
-                ((streamBuilder.makeBinaryStream(stream1, stream2) { (el1, el2) => List(el1, el2) }: Streamable[List[lambda.Node]]) /: rest) {
+                ((streamBuilder.makeBinaryStream(stream1, stream2, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName) { (el1, el2) => List(el1, el2) }: Streamable[List[lambda.Node]]) /: rest) {
                   (resStream: Streamable[List[lambda.Node]], stream3: Streamable[lambda.Node]) =>
-                    streamBuilder.makeBinaryStream(resStream, stream3) { (list, el2) => list :+ el2 }
+                    streamBuilder.makeBinaryStream(resStream, stream3, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName) { (list, el2) => list :+ el2 }
                 }
             }
           
@@ -186,9 +189,9 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
               case Nil => streamBuilder.makeSingletonList(Nil)
               case List(stream) => streamBuilder.makeUnaryStreamList(stream, { el: lambda.Node => List(el) })
               case stream1 :: stream2 :: rest =>
-                ((streamBuilder.makeBinaryStream(stream1, stream2) { (el1, el2) => List(el1, el2) }: Streamable[List[lambda.Node]]) /: rest) {
+                ((streamBuilder.makeBinaryStream(stream1, stream2, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName) { (el1, el2) => List(el1, el2) }: Streamable[List[lambda.Node]]) /: rest) {
                   (resStream: Streamable[List[lambda.Node]], stream3: Streamable[lambda.Node]) =>
-                    streamBuilder.makeBinaryStream(resStream, stream3) { (list, el2) => list :+ el2 }
+                    streamBuilder.makeBinaryStream(resStream, stream3, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName) { (list, el2) => list :+ el2 }
                 }
             }
           
@@ -200,6 +203,119 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
         // anything else is an error 
         case _ => throw new RuntimeException
       }
+    }
+    
+    lazy val mapTypesToParameters = {      
+      // go through all available parameters and generate appropriate nodes	
+      (Map[DomainType, Streamable[Node]]() /:
+        node.getParams) {
+          (map, entry) =>
+            {
+              val parameterTypeInSynth = entry._1
+        			val containerNode = entry._2
+
+        			// XXX this ignores context and domain parameter type (we assume there is only one domain
+        			// parameter type that corresponds to parameterTypeInSynth
+        			val parameterType = {
+        			  val listOfCorrespondingDomainTypes =
+	        			  for (decl <- node.getDecls; val tpe = decl.asInstanceOf[LeonDeclaration].getDomainType;
+        			  		if (tpe.isInstanceOf[domain.FunctionType]);
+        			  		parTpe <- tpe.asInstanceOf[domain.FunctionType].from
+	      			  		if typeTransform(parTpe) == parameterTypeInSynth)
+	        			    	yield parTpe
+    			    	assert(
+  			    	    listOfCorrespondingDomainTypes.size > 0,
+  			    	    "Domain types: " + node.getDecls.map(_.asInstanceOf[LeonDeclaration].getDomainType).
+  			    	    	filter(_.isInstanceOf[domain.FunctionType]).mkString("\n") +
+  			    	    "\nInSynth types: " + node.getParams.map(_._1).mkString("\n")
+			    	    )
+    			    	val setOfCorrespondingDomainTypes = listOfCorrespondingDomainTypes.toSet
+    			    	assert(setOfCorrespondingDomainTypes.size == 1,
+  			    	    "setOfCorrespondingDomainTypes.size == 1. " + setOfCorrespondingDomainTypes.mkString(", "))
+        			  setOfCorrespondingDomainTypes.head
+              }
+              finer("parameterType=" + parameterType + ", parameterTypeInSynth=" + parameterTypeInSynth)
+        			
+              // helper checking function
+              def scanNodesForParametersMap(nodesToCheck: Seq[env.Node]) = {
+                // get all possible terms from each node
+                (List[Streamable[Node]]() /: nodesToCheck) {
+                  (list, nodeToCheck) =>
+                    nodeToCheck match {
+                      // if simple node (with the type that we need), recursively transform it                                            
+                      case nprime: SimpleNode /*if nprime.getType == parameterTypeInSynth*/ =>
+                        for (decl <- nprime.getDecls)
+                          assert(declarationHasAppropriateType(decl, parameterType),
+                            "IntermediateTransformer:211, declaration should have appropriate type")
+                        // add recursively transformed node to set
+                        transform(nprime, context, parameterType, 
+                            visited + nodeToCheck) :: list
+
+                      // should not happen                        
+                      // if leaf node search the context
+                      //case AbsNode(`parameterTypeInSynth`) => set ++ getAllTermsFromContext(parameterType)
+                      case _ => throw new RuntimeException("Cannot go down for type: " + parameterType +
+                        " (InSynth: " + parameterTypeInSynth + ")" + " and the node is " + nodeToCheck + "(Container node: " + containerNode + ")")
+
+                    }
+                }
+              }
+
+              // get node sets for both recursive and non-recursive edges
+              val (recursiveParams, nonRecursiveParams) =
+                containerNode.getNodes partition { visited contains _ }
+
+              // transform only non-recursive 
+              val nonRecursiveStreamableList = scanNodesForParametersMap(nonRecursiveParams.toSeq)
+
+              val paramsStream =
+	              // check for recursive edges
+	              if (!recursiveParams.isEmpty) {
+	                // log
+	                fine("recursive nodes to check " + recursiveParams.mkString(", "))	
+	                
+//	                assert(visitedMap.contains(parameterType), "checking visited map for " + parameterType + " and map is" +
+//                    visitedMap + " and the current node decls " + node.getDecls.map(_.getSimpleName).mkString("\n"))
+//	                assert(!visitedMap(parameterType).isEmpty, "checking visited map for " + parameterType + " and map is" +
+//                    visitedMap)
+//	                for (recursiveParam <- recursiveParams)
+//	                	assert(visitedMap(parameterType).contains(recursiveParam), "visitedMap(parameterType).contains(recursiveParam)")
+//                	var recursiveParamLast = visitedMap(parameterType).last
+//                	var newList = visitedMap(parameterType).init
+//                	while (! (recursiveParams contains recursiveParamLast.asInstanceOf[env.SimpleNode])) {
+//              	    recursiveParamLast = newList.last
+//              	    newList = newList.init
+//                	}
+//	                println("last found " + recursiveParamLast.asInstanceOf[env.SimpleNode].getDecls.map(_.getSimpleName))
+//                	assert(recursiveParams contains recursiveParamLast.asInstanceOf[env.SimpleNode])	                
+	                
+		              // for each parameter set of nodes
+	                val paramInitStream =
+	                  streamBuilder.makeLazyRoundRobbin(nonRecursiveStreamableList, "lazy params for " + parameterType)
+	                
+	                // add this node to the recursive mapping
+	                if (recursiveParamsMap.contains((node, parameterType))) {
+	                  assert(recursiveParamsMap((node, parameterType))._2 == recursiveParams.toSet,
+                      "recursive params map should be same cached")
+                    assert(false)
+	                }
+	                else {
+	                  assert(recursiveParams.toSet.size == recursiveParams.size)
+	                  recursiveParamsMap += ((node, parameterType) ->
+	                  	(paramInitStream, recursiveParams.toSet))
+//	                  recursiveParamsMap += ((node, parameterType) ->
+//	                  	(paramInitStream, Set(recursiveParamLast)))
+	                }
+                  
+                  paramInitStream
+	              } else	                
+	              	streamBuilder.makeRoundRobbin(nonRecursiveStreamableList, "params for " + parameterType + " " + variableGenerator.getFreshVariableName): Streamable[Node]
+	              
+              assert(!map.contains(parameterType))
+              // return the update map with inner nodes added to the set of solutions
+              map + (parameterType -> paramsStream)
+            }
+        }
     }
 
     /**
@@ -228,66 +344,8 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
               fine("need to find parameter for " + parameterType + " parameterTypeInSynth: "
                 + parameterTypeInSynth + " or " + FormatSuccinctType(parameterTypeInSynth))
 
-              // get node with the needed type, deeper in down the tree
-              val containerNode = node.getParams(parameterTypeInSynth)
-
-              // helper checking function
-              def scanNodesForParametersMap(nodesToCheck: Seq[env.Node]) = {
-                // get all possible terms from each node
-                (List[Streamable[Node]]() /: nodesToCheck) {
-                  (list, node) =>
-                    node match {
-                      // if simple node (with the type that we need), recursively transform it                                            
-                      case nprime: SimpleNode /*if nprime.getType == parameterTypeInSynth*/ =>
-                        for (decl <- nprime.getDecls)
-                          assert(declarationHasAppropriateType(decl, parameterType),
-                            "IntermediateTransformer:211, declaration should have appropriate type")
-                        // add recursively transformed node to set
-                        transform(nprime, context, parameterType, visited + node) :: list
-
-                      // should not happen                        
-                      // if leaf node search the context
-                      //case AbsNode(`parameterTypeInSynth`) => set ++ getAllTermsFromContext(parameterType)
-                      case _ => throw new RuntimeException("Cannot go down for type: " + parameterType +
-                        " (InSynth: " + parameterTypeInSynth + ")" + " and the node is " + node + "(Container node: " + containerNode + ")")
-
-                    }
-                }
-              }
-
-              // get node sets for both recursive and non-recursive edges
-              val (recursiveParams, nonRecursiveParams) =
-                containerNode.getNodes partition { visited contains _ }
-
-              // transform only non-recursive 
-              val nonRecursiveStreamableList = scanNodesForParametersMap(nonRecursiveParams.toSeq)
-
-              val paramsStream =
-	              // check for recursive edges
-	              if (!recursiveParams.isEmpty) {
-	                // log
-	                fine("recursive nodes to check " + recursiveParams.mkString(", "))	
-	                
-		              // for each parameter set of nodes
-	                val paramInitStream =
-	                  streamBuilder.makeLazyRoundRobbin(nonRecursiveStreamableList)
-	                
-	                // add this node to the recursive mapping
-	                if (recursiveParamsMap.contains((node, parameterType))) {
-	                  assert(recursiveParamsMap((node, parameterType))._2 == recursiveParams.toSet,
-                      "recursive params map should be same cached")
-	                }
-	                else
-	                  assert(recursiveParams.toSet.size == recursiveParams.size)
-	                  recursiveParamsMap += ((node, parameterType) ->
-	                  	(paramInitStream, recursiveParams.toSet))
-                  
-                  paramInitStream
-	              } else	                
-	              	streamBuilder.makeRoundRobbin(nonRecursiveStreamableList): Streamable[Node]
-	              
               // return the update map with inner nodes added to the set of solutions
-              map + (parameterType -> paramsStream)
+              map + (parameterType -> mapTypesToParameters(parameterType))
             }
         }
     }
@@ -299,7 +357,11 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
      */
     def getMatchingTypeFromDeclaration: List[Streamable[Node]] = {
       // check each declaration
-      (List[Streamable[Node]]() /: node.getDecls) {
+      (List[Streamable[Node]]() /: node.getDecls
+//          .filter(
+//            decl => ! (decl.getSimpleName contains "addToPers") && ! (decl.getSimpleName == "AddressBook")
+//          )
+          ) {
         (list, declaration) =>
           {
             declaration match {
@@ -339,6 +401,7 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
 
       // goal type is function type, we need to add new abstraction
       case fun @ domain.FunctionType(params, retType) => {
+        throw new RuntimeException
         // compute an appropriate abstraction so that the body can be plugged in
         val (abstractionTermFun, contextDelta) = computeAbstraction(emptyContext, goalType)
 
@@ -348,7 +411,7 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
         // transform all body nodes
         val subtreeStreams = getMatchingTypeFromDeclaration
         // make round robbin out of them
-        val roundRobin = streamBuilder.makeRoundRobbin(subtreeStreams.toSeq)
+        val roundRobin = streamBuilder.makeRoundRobbin(subtreeStreams.toSeq, "wtv")
         // out of this make stream of abstractions
         streamBuilder.makeUnaryStream(roundRobin,
           { el: lambda.Node => abstractionTermFun(el) }, "kurac",  Some(_ + 1))        
@@ -362,9 +425,12 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
       case _ =>
         // return only the set of terms matching given declarations
         // NOTE no need to scan context here because it is done when parameter search encounters a leaf node        
-        assert(getMatchingTypeFromDeclaration.size == node.getDecls.size, "kurac!: " + getMatchingTypeFromDeclaration.size + "==" + node.getDecls.size)
-        streamBuilder.makeRoundRobbin(getMatchingTypeFromDeclaration)
-
+//        assert(getMatchingTypeFromDeclaration.size == node.getDecls.size, "kurac!: " + getMatchingTypeFromDeclaration.size + "==" + node.getDecls.size)
+// DEBUG
+        if (getMatchingTypeFromDeclaration.size > 0)
+        streamBuilder.makeRoundRobbin(getMatchingTypeFromDeclaration, "all decls for goal type" + goalType + " " + variableGenerator.getFreshVariableName)
+        else
+          streamBuilder.makeEmptyStreamable
     }
 
     // add transformed node into the result
@@ -484,6 +550,7 @@ class Transformer(streamBuilderXXX: StreamFactory[Node])
       ((node, parameterType), (paramInitStream, recursiveParams)) <- recursiveParamsMap
     ) {
       val recursiveStreams = recursiveParams map (nodeMap(_))
+      assert(recursiveStreams.size > 0, "recursiveStreams.size > 0")
     
       paramInitStream addStreamable recursiveStreams
       assert(!paramInitStream.isInitialized, "!paramInitStream.isInitialized")

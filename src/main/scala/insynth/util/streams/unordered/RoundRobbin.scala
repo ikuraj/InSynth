@@ -10,14 +10,21 @@ import insynth.util.streams.Streamable
  * @param <T>
  * @param streams stream that form a new stream
  */
-class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]]) extends Streamable[T] {
-    
-  assert(!streams.isEmpty, "!streams.isEmpty")
-  // should be sorted
+class RoundRobbin[T](val streams: Seq[Streamable[T]]) extends Streamable[T] {
     
   // this stream is infinite if there is an infinite stream in the array
   // compute infinite flag only once
-  lazy val isInfiniteFlag = streams.exists(_.isInfinite)//streams.head.isInfinite
+  lazy val isInfiniteFlag = //streams.exists( _.isInfinite )
+  {
+    var found = false
+    var ind = 0
+    while (!found && ind < streams.size) {
+      found = streams(ind).isInfinite
+        
+      ind += 1
+    }
+    found
+  }
   
   override def isInfinite = isInfiniteFlag
   
@@ -84,10 +91,5 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]]) extend
 }
 
 object RoundRobbin {
-  def apply[T](streamsIn: Seq[Streamable[T]]) = {    
-//    assert(streams.forAll(!_.isInfinite))
-  	val streams = streamsIn.sortWith(!_.isInfinite && _.isInfinite)
-  	
-    new RoundRobbin(streams)
-  }
+  def apply[T](streams: Seq[Streamable[T]]) = new RoundRobbin(streams)
 }

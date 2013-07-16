@@ -2,21 +2,43 @@ package insynth.util.streams.ordered2
 
 import scala.collection.mutable.{ Seq => MutableSeq }
 
-import insynth.util.logging.HasLogger
+import insynth.util.logging._
 import insynth.util.streams.ordered2.{ OrderedSizeStreamable => Streamable }
 import insynth.util.streams.unordered.{ RoundRobbin => UnRoundRobbin }
 
 class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]], name: String)
-	extends Streamable[T] with HasLogger {
+	extends Streamable[T] with HasDefferLogger {
     
-  override def depleted: Boolean = getNextIndex._2 == -1 // wtv
-  override def nextReady: Boolean = streams.exists(! _.nextReady)
+  override def depleted: Boolean = throw new RuntimeException//getNextIndex._2 == -1 // wtv
+  override def nextReady(ind: Int): Boolean = {
+    assert(ind <= enumeratedCounter + 1)
+    if (ind <= enumeratedCounter) true
+    else {
+	    val res = if (ind != enumeratingCounter) {
+	      enumeratingCounter = ind
+		    val resIn = ((false /: (streams zip iteratorIndexes)) {
+		      (res, p) => res || p._1.nextReady(p._2)
+		    })
+		    enumeratingCounter = -1
+		    resIn
+	    } else false
+	    fine("ready for " + ind + "? " + res)
+	    res
+    }
+  }
+    //streams.exists(! _.nextReady)
+  
+  // TODO merge into one counter
+  var enumeratedCounter = -1
+  // dealing with loops
+  var enumeratingCounter = -1
   
   // iterators that track the positions in each stream
   // hidden so it looks as functional
   private var _valueIterators: Array[BufferedIterator[Int]] = Array.fill(streams.size)(null)
   protected var _iterators: Array[Iterator[T]] = Array.fill(streams.size)(null)
-   
+  protected var iteratorIndexes: Array[Int] = Array.fill(streams.size)(0)
+  
   protected def iterators(ind: Int) = {
     if (_iterators(ind) == null) {
       _iterators(ind) = streams(ind).getStream.iterator
@@ -43,7 +65,9 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]], name: 
     while (ind < valueIteratorsSize) {
       val indToCheck = (currentInd + ind) % valueIteratorsSize
       
-      if (streams(indToCheck).nextReady) {
+      fine("from " + this.toString + " checking ready" + streams(indToCheck).toString + " and is " + streams(indToCheck).nextReady(iteratorIndexes(indToCheck)))
+      if (streams(indToCheck).nextReady(iteratorIndexes(indToCheck))) {
+        assert(valueIterators(indToCheck).hasNext, "valueIterators(indToCheck).hasNext for " + indToCheck)
 	      fine("checking index: " + indToCheck + ", valueIterators(indToCheck).hasNext: " + valueIterators(indToCheck).hasNext)
 	      if (valueIterators(indToCheck).hasNext) fine("valueIterators(indToCheck).head: " + valueIterators(indToCheck).head)
 	      if (valueIterators(indToCheck).hasNext && valueIterators(indToCheck).head < min) {
@@ -66,19 +90,28 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]], name: 
     // TODO wow a bug found due to the name!?
     def loopXXX(index: Int): Stream[(T, Int)] = {
   		//entering(this.getClass.getName, "loop:" + this.getName, index)
+      
+      enumeratingCounter = enumeratedCounter + 1
+  		fine("loopXXX for enumeratingCounter " + enumeratingCounter + " array:" + iteratorIndexes.mkString("(",",",")"))
   		
       currentInd = index
       // check if there is at least one iterator with next element
-  		getNextIndex match {
-  		  case (nextValue, nextIndex) if nextIndex > -1 =>
-  		    // forward the value iterator
-  		    valueIterators(nextIndex).next
-			    // prepend the element to a recursively computed stream
-			  	(iterators(nextIndex).next, nextValue) #:: loopXXX((index + 1) % streams.size)
-  		  case _ =>
-				  // no iterator has next, return empty stream
-				  Stream.empty  		    
-  		}
+  		val res =
+			  getNextIndex match {
+	  		  case (nextValue, nextIndex) if nextIndex > -1 =>
+	  		    iteratorIndexes(nextIndex) += 1
+	  		    // forward the value iterator
+	  		    valueIterators(nextIndex).next
+				    // prepend the element to a recursively computed stream
+				  	(iterators(nextIndex).next, nextValue) #:: loopXXX((index + 1) % streams.size)
+	  		  case _ =>
+					  // no iterator has next, return empty stream
+					  Stream.empty  		    
+	  		}
+      
+      enumeratedCounter += 1
+      enumeratingCounter = -1
+      res
     }
 			  
 	  // start with first iterator
@@ -86,12 +119,12 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]], name: 
   }
   
   override def getStream = {
-    fine("getStream RoundRobbin")
+//    fine("getStream RoundRobbin array:" + iteratorIndexes.mkString("(",",",")"))
     streamWithValues map { _._1 }
   }
   
   override def getValues = {
-    fine("getValues LazyRoundRobbin")
+//    fine("getValues LazyRoundRobbin")
     streamWithValues map { _._2 }
   }
   

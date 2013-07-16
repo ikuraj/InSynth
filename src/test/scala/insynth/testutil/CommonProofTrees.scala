@@ -16,6 +16,11 @@ object CommonProofTrees {
 
   import CommonDeclarations._
 
+  val intNode =
+    new SimpleNode(
+      List(intDeclaration),
+      MutableMap.empty)
+  
   def exampleBoolToInt = {
     val queryBuilder = new QueryBuilder(Int32Type)
 
@@ -53,11 +58,6 @@ object CommonProofTrees {
     val query = queryBuilder.getQuery
 
     val queryDeclaration = query.getDeclaration
-
-    val intNode =
-      new SimpleNode(
-        List(intDeclaration),
-        MutableMap.empty)
 
     val getIntNode =
       new SimpleNode(

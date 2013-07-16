@@ -15,4 +15,6 @@ abstract class Declaration(val inSynthType: Type, val weight: Weight) {
       
   def getType = inSynthType
   
+  def getSimpleName: String
+  
 }

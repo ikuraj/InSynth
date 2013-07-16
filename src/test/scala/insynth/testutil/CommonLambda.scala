@@ -20,7 +20,7 @@ object CommonLambda {
 
     val functionApplication =
       Application(
-        functionIntToIntType,
+        functionBoolToIntType,
         List(
           Identifier(functionBoolToIntType, functionBoolToIntDeclaration),
           booleanIdentifier))
