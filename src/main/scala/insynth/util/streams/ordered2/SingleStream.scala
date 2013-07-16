@@ -7,7 +7,7 @@ protected class SingleStream[T](stream: => Stream[(T, Int)])
 	extends OrderedSizeStreamable[T] {
   
   override def depleted: Boolean = throw new RuntimeException // wtv
-  override def nextReady: Boolean = throw new RuntimeException
+  override def nextReady(ind: Int): Boolean = throw new RuntimeException
   
   override def getStream = stream map { _._1 }
   

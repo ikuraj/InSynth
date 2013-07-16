@@ -39,21 +39,23 @@ class Extractor(streamBuilder: StreamFactory[Node])
   def apply(tree: int.Node) = {
     entering("apply", FormatIntermediate(tree))
 
+    info("initializing extractor")
     initialize
 
+    info("transform tree into a streamable")
     // transform tree into a streamable
     val transformed = transform(tree)
 
     // logging
     info("done transforming")
-    fine("before postprocess got transformed:\n" + FormatStreamUtils(transformed))
+    finer("before postprocess got transformed:\n" + FormatStreamUtils(transformed))
 
     postProcess
 
     // logging
     info("done postProcess")
-    fine("got transformed: " + FormatStreamUtils(transformed))
-    fine("transformed infinite: " + transformed.isInfinite)
+    finer("got transformed: " + FormatStreamUtils(transformed))
+    fine("transformed.isInfinite: " + transformed.isInfinite)
 
     // debug
     transformedStreamable = transformed
@@ -109,7 +111,7 @@ class Extractor(streamBuilder: StreamFactory[Node])
             // if we have recursive edges
             if (!app.recursiveParams.isEmpty) {
               // logging
-              fine("recursiveParams recorded: " + app.recursiveParams.mkString(", "))
+              finer("recursiveParams recorded: " + app.recursiveParams.mkString(", "))
 
               // for each parameter set of nodes
               val paramsInitStreams = for (paramSet <- params) yield {
@@ -181,12 +183,15 @@ class Extractor(streamBuilder: StreamFactory[Node])
   }
 
   def postProcess = {
+    fine("postProcess called\nGoing into loop with list of size " + postprocessList.size)
     // for each application node and its parameter round robbins
     for ((app, paramstreams) <- postprocessList) {
       // logging
-      fine("(app, paramstreams): " + (app, paramstreams))
-      assert(app.recursiveParams.size == app.params.size, "For node " + FormatIntermediate(app) +
-        " app.recursiveParams.size is " + app.recursiveParams.size + " while app.params.size is " + app.params.size)
+      fine("postProcess of app: " + app.getParams.head.head.asInstanceOf[int.Identifier].decl.getSimpleName)
+      finer("(app, paramstreams): " + (app, paramstreams))
+      assert(app.recursiveParams.size == app.params.size)
+//      assert(app.recursiveParams.size == app.params.size, "For node " + FormatIntermediate(app) +
+//        " app.recursiveParams.size is " + app.recursiveParams.size + " while app.params.size is " + app.params.size)
       assert(app.recursiveParams.head.isEmpty, "Extractor 40")
 
       // this may not hold since we can not have single stream in case of reduced app

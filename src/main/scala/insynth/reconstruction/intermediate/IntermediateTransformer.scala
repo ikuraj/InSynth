@@ -86,7 +86,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
     // optimization, if the node has already been transformed
     if (nodeMap contains node) {
       // logging
-      info("node is cached in nodeMap, returning cached version - node: " + FormatSuccinctNode(node))
+      finest("node is cached in nodeMap, returning cached version - node: " + FormatSuccinctNode(node))
       return nodeMap(node)
     }
 
@@ -112,7 +112,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
         // fun directly returns the needed type just generate the application node
         // without recursive calls
         case domain.FunctionType(params, `goalReturnType`) => {
-          info("generating application for function with parameters: " +
+          fine("generating application for function with parameters: " +
             (params map { t => FormatLeonType(t).toString }).mkString(","))
 
           // get a set of nodes for each parameter type
@@ -126,7 +126,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
               }
             }
 
-          info("paramsSetList: " + (paramsSetList) + " size=" + paramsSetList.size)
+          fine("paramsSetList: " + (paramsSetList) + " size=" + paramsSetList.size)
 
           Application(fun, Set(functionNode) :: paramsSetList)
         }
@@ -135,7 +135,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
         case domain.FunctionType(params, innerFun: domain.FunctionType) =>
 
           assert(false, "functionNode should be identifier not" + FormatIntermediate(functionNode))
-          info("generating application for function with parameters: " +
+          fine("generating application for function with parameters: " +
             (params map { t => FormatLeonType(t).toString }))
 
           val mapOfSetsOfParameterTypes = getMapTypesToParameters(params)
@@ -146,7 +146,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
                 //case null => Set(NullLeaf).asInstanceOf[Set[IntermediateNode]]
               }
             }
-          info("paramsSetList: " + (paramsSetList) + " size=" + paramsSetList.size)
+          fine("paramsSetList: " + (paramsSetList) + " size=" + paramsSetList.size)
 
           generateApplicationAccordingToFunction(
             innerFun,
@@ -165,9 +165,9 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
      */
     def getMapTypesToParameters(parameterList: List[DomainType]) = {
       // logging
-      info("paramsList: " +
+      fine("paramsList: " +
         (parameterList map { t: DomainType => if (t != null) FormatLeonType(t).toString else "null" }).mkString(","))
-      info("paramsList filter: " +
+      fine("paramsList filter: " +
         ((parameterList filter { _ != null } distinct) map { t: DomainType => if (t != null) FormatLeonType(t).toString else "null" }).mkString(","))
 
       // go through all needed parameters and generate appropriate nodes
@@ -181,7 +181,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
               val parameterTypeInSynth = typeTransform(parameterType)
 
               // log
-              info("need to find parameter for " + parameterType + " parameterTypeInSynth: "
+              fine("need to find parameter for " + parameterType + " parameterTypeInSynth: "
                 + parameterTypeInSynth + " or " + FormatSuccinctType(parameterTypeInSynth))
 
               // get node with the needed type, deeper in down the tree
@@ -222,7 +222,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
               // check for recursive edges
               if (!recursiveParams.isEmpty) {
                 // log
-                info("recursive nodes to check " + recursiveParams)
+                fine("recursive nodes to check " + recursiveParams)
 
                 // add entry to the recursive list to take care at the end
                 recursiveNodeSet += node
@@ -258,7 +258,7 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
 
                   // generate application terms according to this function 
                   case sf: domain.FunctionType =>
-                    info("generating application for " + nd)
+                    fine("generating application for " + nd)
                     generateApplicationAccordingToFunction(sf, Identifier(nd.getDomainType, nd))
 
                   // should not happen

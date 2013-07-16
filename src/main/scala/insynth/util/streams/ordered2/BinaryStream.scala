@@ -1,25 +1,75 @@
 package insynth.util.streams.ordered2
 
-import scala.collection.mutable.{ ArrayBuffer, LinkedList => MutableList }
+import scala.collection.mutable.{ ArrayBuffer, LinkedList => MutableList, HashMap => MutableMap, HashSet => MutableSet }
 
-import insynth.util.logging.HasLogger
+import insynth.util.logging._
 import insynth.util.streams.ordered2.{ OrderedSizeStreamable => Streamable }
 
-class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
+class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V], name: String)
 	(combine: (T, V) => U)
 	extends Streamable[U] with HasLogger {
   
   override def depleted: Boolean =
     s1.depleted || s2.depleted
-  override def nextReady: Boolean =
-    s1.nextReady && s2.nextReady
+  override def nextReady(ind: Int): Boolean = {
+//    if (toString contains "concat") startLogging
+    fine("nextReady ind " + ind + " enumeratedSize " + enumeratedSize)
+    assert(ind < enumeratedSize + 1, toString + " ind " + ind + " enumeratedSize " + enumeratedSize)
+    val res = ind < enumeratedSize || hasNextFromIndexes// || getMinIterator(lastIndexCache) >= 0 //s1.nextReady && s2.nextReady
+    fine("exiting nextReady ind " + ind + " ready " + res)
+//    if (!res) stopLogging(true)
+//    else stopLogging(true)
+    res
+  }
+    
+  var enumeratedSize = 0
+//  var lastIndexCache = 0
         
   var iterators = ArrayBuffer[BufferedIterator[(U, Int)]]()
   
   var iteratorsToBeAdded = MutableList[BufferedIterator[(U, Int)]]()
   
-  def addToIterators(it: BufferedIterator[(U, Int)]) = //iterators append it
+  // isLeft?, index
+  var indexesToCheck: MutableMap[(Boolean, Int), Int] = MutableMap.empty
+  // for checking when indexes are equal
+  var indexesToCheckSet: MutableSet[Int] = MutableSet(0)
+  
+  def hasNextFromIndexes = {
+    fine("indexesToCheck = " + indexesToCheck + " indexesToCheckSet = " + indexesToCheckSet)
+    (false /: indexesToCheck) {
+      (res, p) => {
+        val isLeft = p._1._1        
+        val ind = p._1._2
+        val currentInd = p._2
+        if (isLeft) {
+          fine("isLeft s2.nextReady(currentInd)=" + s2.nextReady(currentInd) + " currentInd=" + currentInd)
+          res || s2.nextReady(currentInd)
+        }
+        else {
+          fine("!isLeft s1.nextReady(currentInd)=" + s1.nextReady(currentInd) + " currentInd=" + currentInd)
+          res || s1.nextReady(currentInd)
+        }
+      }
+    } || 
+    (false /: indexesToCheckSet) {
+      (res, ind) => {
+        res || (s1.nextReady(ind) && s2.nextReady(ind))
+      }
+    }
+  }
+  
+  def addToIterators(it: => BufferedIterator[(U, Int)], isLeft: Boolean, ind: Int) = {//iterators append it    
+    fine("adding iterator " + (isLeft: Boolean, ind: Int))
+    indexesToCheck += ((isLeft, ind) -> (ind + 1))
+    if (isLeft) {
+      indexesToCheckSet += (ind + 1)
+    } 
     iteratorsToBeAdded :+= it
+  }
+  
+  def addToIterators(it: BufferedIterator[(U, Int)]) = {//iterators append it    
+    iteratorsToBeAdded :+= it
+  }
   
 //  var leftStreamsMap: MutableMap[Int, Stream[(U, Int)]] = MutableMap.empty
 //  var rightStreamsMap: MutableMap[Int, Stream[(U, Int)]] = MutableMap.empty
@@ -81,16 +131,22 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	      
 	      if ( !produced && (ind2 - ind1 > 1) && producingPossible && nextSize > nextLeftSizeCombined ) { 
 		      // add a new iterator
-		      addToIterators( leftStream(ind1 + 1).iterator.buffered )	   
+		      addToIterators( leftStream(ind1 + 1).iterator.buffered, true, ind1 + 1 )	   
 		      // set the flag
 		      produced = true
 		      
 	        rightIterator.next
+	        assert(indexesToCheck.contains((true, ind1)), "could not find " +
+	        		(true, ind1) + " in indexesToCheck=" + indexesToCheck)
+		      indexesToCheck.update((true, ind1), indexesToCheck(true, ind1) + 1)
 	        
 	        (combine(leftStreamPart(1), s2.getStream(startingInd2)), nextLeftSizeCombined) #::
 	        (combine(leftElem, nextRightElem), nextSize) #:: loop(ind2 + 1)
 	      } else {
 	        rightIterator.next
+	        assert(indexesToCheck.contains((true, ind1)), "could not find " +
+	        		(true, ind1) + " in indexesToCheck=" + indexesToCheck)
+		      indexesToCheck.update((true, ind1), indexesToCheck(true, ind1) + 1)
 	        (combine(leftElem, nextRightElem), nextSize) #:: loop(ind2 + 1)
 	      }
       }
@@ -99,12 +155,13 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
       else if (!produced && ind2 - ind1 > 1 && producingPossible) {
         if (ind2 - ind1 > 2) {
 		      // add a new iterator
-		      addToIterators( leftStream(ind1 + 1).iterator.buffered )	   
+		      addToIterators( leftStream(ind1 + 1).iterator.buffered, true, ind1 + 1 )	   
 		      // set the flag
 		      produced = true
         }
 	      
 	      // return "equal" combination
+        indexesToCheckSet -= startingInd2
 	      Stream(
 	        (combine(leftStreamPart(1), s2.getStream(startingInd2)),
 	        nextLeftSizeCombined)
@@ -171,7 +228,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
     // produce the pair and new iterator
     def produce = {
       // add a new iterator
-      addToIterators( rightStream(ind2 + 1).iterator.buffered )	   
+      addToIterators( rightStream(ind2 + 1).iterator.buffered, false, ind2 + 1 )	   
       // set the flag
       produced = true
       
@@ -200,6 +257,9 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	      }
 
         leftIterator.next	        
+	        assert(indexesToCheck.contains(false, ind2), "could not find " +
+	        		(false, ind2) + " in indexesToCheck=" + indexesToCheck)
+		      indexesToCheck.update((false, ind2), indexesToCheck(false, ind2) + 1)
         (combine(nextLeftElem, rightElem), nextSize) #:: loop(ind1 + 1)	      
       } 
       else
@@ -256,17 +316,27 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
       //val (minInd, indNext) = getMinIterator(lastIndex)
       val minInd = getMinIterator(lastIndex)
       
-      if (minInd >= 0)
-      	iterators(minInd).next #:: loop(minInd + 1) 
+      if (minInd >= 0) {
+      	val res = iterators(minInd).next #:: loop(minInd + 1)
+//  			lastIndexCache = minInd + 1
+      	enumeratedSize += 1
+      	res
 //        {
 //        	if (iteratorsToBeAdded.size > 0)
 //        	  loop(0)
 //      	  else
 //      	  	loop(indNext)
 //      	}
+      }
     	else
     	  Stream.empty
     }
+    
+//    lastIndexCache = 0
+  	enumeratedSize += 1  	
+    indexesToCheck += ((true, 0) -> 1)
+    indexesToCheck += ((false, 0) -> 1)
+    indexesToCheckSet -= 0
     
 	  (combine(s1.getStream.head, s2.getStream.head), s1.getValues.head + s2.getValues.head) #:: {
 	    addToIterators( leftStream(0).iterator.buffered )
@@ -287,11 +357,13 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
     else
       alternativeStream map { _._2 }
   
+  override def toString = name
+  
 }
 
 object BinaryStream {
-	def apply[T, V, U](s1: Streamable[T], s2: Streamable[V])(combine: (T, V) => U) =
-	  new BinaryStream(s1, s2)(combine)
+	def apply[T, V, U](s1: Streamable[T], s2: Streamable[V], name: String)(combine: (T, V) => U) =
+	  new BinaryStream(s1, s2, name: String)(combine)
 }
 //  			    
 //    leftStream.head #:: getStreamAlternative(rightStream, leftStream.tail) 

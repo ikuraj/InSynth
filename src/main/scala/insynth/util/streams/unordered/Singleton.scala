@@ -10,8 +10,6 @@ import insynth.util.streams.Streamable
 class Singleton[T](element: T) extends Streamable[T] {
   def isInfinite = false
   override def getStream = Stream(element)
-  
-  override def toString = element.toString
 }
 
 object Singleton {

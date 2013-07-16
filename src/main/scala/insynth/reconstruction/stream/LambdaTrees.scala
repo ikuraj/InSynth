@@ -69,7 +69,9 @@ case class Variable(tpe: DomainType, name: String) extends Leaf(tpe)
  * identifier in scope
  * @param decl declaration with more information about the identifier 
  */
-case class Identifier(tpe: DomainType, decl: Declaration) extends Leaf(tpe)
+case class Identifier(tpe: DomainType, decl: Declaration) extends Leaf(tpe) {
+  override def toString = decl.getSimpleName
+}
 
 /**
  * identifier in scope
@@ -85,6 +87,8 @@ case object NullLeaf extends Leaf(null)
 case class Application(tpe: DomainType, params: List[Node]) extends Node {  
   def getType = tpe
   def getParams = params
+  
+  override def toString = params.head.toString + params.tail.mkString("(", ", ", ")")
 }
 
 /**
