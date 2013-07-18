@@ -34,11 +34,14 @@ object ZeroLoggerFactory {
 ////    if (className.contains("insynth.InSynth"))
 ////    	(Filter.Finest, new SimpleFormatter(className) with ConsoleLogger)
 ////  	else
+//	if (className.contains("CodeGenExampleRunner"))
+//    	(Filter.Finest, new SimpleFormatter(className) with ConsoleLogger)
+//    else    
 	if (className.contains("lesynth.Synthesizer"))
     	(Filter.Fine, new SimpleFormatter(className) with ConsoleLogger)
-    else
-    if (className.contains("lesynth.RelaxedVerifier"))
-    	(Filter.Finest, new SimpleFormatter(className) with ConsoleLogger)
+//    else
+//    if (className.contains("lesynth.RelaxedVerifier"))
+//    	(Filter.Finest, new SimpleFormatter(className) with ConsoleLogger)
     else 
     	(Filter.Off, new SimpleFormatter(className) with ConsoleLogger)
 
