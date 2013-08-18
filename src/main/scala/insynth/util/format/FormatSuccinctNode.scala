@@ -3,7 +3,7 @@ package insynth.util.format
 import scala.text.Document._
     
 import insynth.structures._
-import insynth.interfaces.Declaration
+import insynth.load.Declaration
 
 case class FormatSuccinctNode(node: Node, levels: Int = -1) extends Formatable {
   override def toDocument = toDocument(node, Set.empty, 0)

@@ -1,7 +1,7 @@
 package insynth.engine
 
 import insynth.structures.{ SuccinctType => Type, TSet }
-import insynth.interfaces.Declaration
+import insynth.load.Declaration
 import insynth.engine.scheduler.Scheduler
 
 abstract class EnvironmentBuilder {

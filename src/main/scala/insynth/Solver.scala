@@ -1,7 +1,8 @@
 package insynth
 
-import insynth.interfaces.{ Loader, Declaration, QueryBuilder }
-import insynth.engine.{ Engine, InitialEnvironmentBuilder }
+import insynth.load._
+import insynth.engine._
+import insynth.query._
 import insynth.engine.scheduler.WeightScheduler
 import insynth.structures.ContainerNode
 
@@ -14,7 +15,7 @@ import insynth.util.format.TreePrinter
  * @param program Leon program object that contains the hole
  * @param hole hole in the program on which the synthesis is called 
  */
-class Solver(declarations: List[Declaration], queryBuilder: QueryBuilder) extends HasLogger {
+class Solver(declarations: List[Declaration], queryBuilder: QueryBuilder, timeOut: Int = 500) extends HasLogger {
   
   def this(loader: Loader, queryBuilder: QueryBuilder) = this(loader.load, queryBuilder)
   
@@ -41,7 +42,7 @@ class Solver(declarations: List[Declaration], queryBuilder: QueryBuilder) extend
 	  finer("declarations seen:\n" + builder.getAllDeclarations.mkString("\n"))
 	  
 	  // create the engine
-    val engine = new Engine(builder, query, new WeightScheduler(), TimeOut(Config.getTimeOutSlot))
+    val engine = new Engine(builder, query, new WeightScheduler(), TimeOut(timeOut))
     // measure time
     val time = System.currentTimeMillis      
 	  // run the engine
@@ -49,7 +50,7 @@ class Solver(declarations: List[Declaration], queryBuilder: QueryBuilder) extend
 
     if (solution != null) {
       info("Solution found in " + (System.currentTimeMillis - time) + " ms.")
-      finer("Solution found: " + TreePrinter(solution, Config.proofTreeLevelToLog))
+      finer("Solution found: " + TreePrinter(solution, 3))
     } else 
       info("No solution found in " + (System.currentTimeMillis - time) + " ms")
     
@@ -62,8 +63,8 @@ class Solver(declarations: List[Declaration], queryBuilder: QueryBuilder) extend
    * @return container node representing the proof tree
    */
   def getProofTree: ContainerNode = {
-    println("initialBuilder.getAllDeclarations.size: " + initialBuilder.getAllDeclarations.size)
-    println("initialBuilder.clone.getAllDeclarations.size: " + initialBuilder.clone.getAllDeclarations.size)
+    finer("initialBuilder.getAllDeclarations.size: " + initialBuilder.getAllDeclarations.size)
+    finer("initialBuilder.clone.getAllDeclarations.size: " + initialBuilder.clone.getAllDeclarations.size)
     
     // call on new identical builder, with same declarations    
     getProofTree(initialBuilder.clone)    

@@ -2,7 +2,7 @@ package insynth.engine
 
 import insynth.engine.scheduler.Scheduler
 import insynth.structures.{ SuccinctType => Type }
-import insynth.interfaces.Query
+import insynth.query.Query
 
 import insynth.util.TimeOut
 import insynth.util.logging.HasLogger
