@@ -1,8 +1,5 @@
 package insynth.util.logging
 
-import com.dongxiguo.zeroLog.Filter
-import com.dongxiguo.zeroLog.formatters.SimpleFormatter
-
 import scala.util.logging.{ Logged, ConsoleLogger }
 
 /** 
@@ -13,15 +10,9 @@ import scala.util.logging.{ Logged, ConsoleLogger }
 trait HasLogger {  
   
   protected[this] def getMyClass = this.getClass
-    
-  lazy val loggingCondition = true
   
   protected[this] lazy val (logger, formatter) =
-    if (loggingCondition)
-    	ZeroLoggerFactory.newLogger(getMyClass.toString)
-  	else
-    	(Filter.Off, new SimpleFormatter(getMyClass.toString) with ConsoleLogger)
-//    (new DummyLogger, null)
+    LoggerFactory.newLogger(getMyClass.toString)
   
   import formatter._
   
