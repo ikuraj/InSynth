@@ -3,6 +3,10 @@ package insynth.util.logging
 import scala.util.logging._
 import java.io._
 
+/**
+ * logs to a string instead directly to an output stream
+ * provides flexibility of printing accumulated messages
+ */
 trait StringLogger extends Logged {
   import StringLogger._
   
@@ -11,7 +15,6 @@ trait StringLogger extends Logged {
   }
   
   override def toString = sw.toString
-  
 }
 
 object StringLogger {
