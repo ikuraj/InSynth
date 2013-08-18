@@ -1,7 +1,7 @@
 package insynth.engine
 
 import insynth.structures.{ SuccinctType => Type }
-import insynth.interfaces.Declaration
+import insynth.load.Declaration
 
 class TypeAssignment(tpe:Type) {
   assert(tpe != null)

@@ -1,7 +1,7 @@
 package insynth.structures
 
 import insynth.structures.{ SuccinctType => Type }
-import insynth.interfaces.Declaration
+import insynth.load.Declaration
 
 import scala.collection.mutable.{ Set, Map }
 
