@@ -1,7 +1,7 @@
 package insynth.util.format
 
 import insynth.structures.{ ContainerNode, SimpleNode }
-import insynth.interfaces.Declaration
+import insynth.load.Declaration
 import java.io.PrintWriter
 import java.io.FileWriter
 import java.io.ByteArrayOutputStream

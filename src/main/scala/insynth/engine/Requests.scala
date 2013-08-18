@@ -3,7 +3,7 @@ package insynth.engine
 import insynth.structures.{ SuccinctType => Type, _ }
 import scheduler.ListenerHolder
 import scheduler.Subject
-import insynth.interfaces.Declaration
+import insynth.load.Declaration
 
 class Requests extends ListenerHolder {
   
