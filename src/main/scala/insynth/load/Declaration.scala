@@ -1,8 +1,7 @@
 package insynth.load
 
-import insynth.structures.{ SuccinctType => Type }
+import insynth.structures.{ SuccinctType => Type, _ }
 import insynth.structures.Weight._
-import insynth.structures.{SuccinctType => Type}
 
 abstract class Declaration(val inSynthType: Type, val weight: Weight) {        
 	
@@ -17,5 +16,7 @@ abstract class Declaration(val inSynthType: Type, val weight: Weight) {
   def getType = inSynthType
   
   def getSimpleName: String
+  
+  def getDomainType: DomainType
   
 }
