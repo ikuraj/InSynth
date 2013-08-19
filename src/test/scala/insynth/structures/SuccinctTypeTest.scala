@@ -5,7 +5,7 @@ import org.scalatest.junit.JUnitSuite
 import org.junit.Assert._
 import org.junit.Test
 
-class TreesTest extends JUnitSuite {
+class SuccinctTypeTest extends JUnitSuite {
   
   @Test
   def testTree1 {
