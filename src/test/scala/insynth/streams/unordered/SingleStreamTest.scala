@@ -21,7 +21,7 @@ class SingleStreamTest extends FunSuite {
     
     val stream = streamable.getStream
     
-    expect(100) { stream.take(100).size }
+    expectResult(100) { stream.take(100).size }
     
   }
     
@@ -35,7 +35,7 @@ class SingleStreamTest extends FunSuite {
     
     val stream = streamable.getStream
     
-    expect(6) { (0 /: stream)(_ + _) }
+    expectResult(6) { (0 /: stream)(_ + _) }
     
   }
   
