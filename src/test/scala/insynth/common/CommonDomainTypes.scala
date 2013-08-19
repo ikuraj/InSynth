@@ -17,6 +17,9 @@ object CommonDomainTypes {
    
   val functionIntToIntType =
     Function(List(typeInt), typeInt)
+    
+  val threeParFunctionType =
+    Function(List(typeInt, typeInt, typeBoolean), typeInt)
 
   val functionFunsToFunType =
     Function(List(functionBoolToIntType, functionFun1ToUnitType), functionIntToIntType)

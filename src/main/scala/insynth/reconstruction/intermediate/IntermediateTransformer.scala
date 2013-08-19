@@ -37,11 +37,10 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
     // initialize data for this traversal
     resetInitialData
 
-    // calculate the goal type as being the only parameter in the query node
-    assert(root.getDecls.head.isQuery)
+    // the procedure can be applied to any node (not just query) - calculate the goal type
+    // as being the return type of the function
     val goalType =
       root.getDecls.head.getDomainType match {
-        // TODO should be bottom type here
         case FunctionType(_, retType) => retType
         case _ => throw new Exception("Domain type of the root declaration should reflect a function" +
         		"(since it has to be bot -> desiredType)")
@@ -375,7 +374,8 @@ object IntermediateTransformer extends (SimpleNode => IntermediateNode) with Has
       case Arrow(_, retType) => retType
       case c: Const => c
       case i: Instance => i
-      case _ => throw new RuntimeException
+      case BottomType => BottomType
+      case _ => throw new Exception("Cannot handle type: " + goalType.toSuccinctType)
     }
     // get return type of the dec declaration
     val declarationGoalType = dec.getType match {

@@ -11,7 +11,7 @@ abstract class Declaration(val inSynthType: Type, val weight: Weight) {
   //def setWeight(weight:Weight) { this.weight = weight }
   
   def isQuery = this.query
-  def setIsQuery(query:Boolean){ this.query = query }
+  def setIsQuery(query:Boolean){ this.query = query; this }
       
   def getType = inSynthType
   
