@@ -13,6 +13,6 @@ case class TestQueryBuilder(goalType: SuccinctType) extends QueryBuilder(goalTyp
   val domainRetType = Atom(BottomType)
   val domainType = Function(List(Atom(goalType)), domainRetType)
   
-  def getQuery = TestQuery(inSynthRetType, new TestDeclaration(domainType), new InitialSender())
+  def getQuery = TestQuery(inSynthRetType, TestDeclaration(domainType), new InitialSender())
   
 }

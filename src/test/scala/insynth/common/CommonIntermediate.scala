@@ -18,7 +18,7 @@ object CommonIntermediate {
 
     val functionApplication =
       Application(
-        functionIntToIntType,
+        functionBoolToIntType,
         List(
           Set(Identifier(functionBoolToIntType, functionBoolToIntDeclaration)),
           Set(Identifier(typeBoolean, booleanDeclaration))))
