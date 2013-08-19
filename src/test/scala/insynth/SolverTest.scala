@@ -2,6 +2,7 @@ package insynth.util.streams.ordered
 
 import insynth._
 import insynth.testdomain._
+import insynth.common._
 
 import org.scalatest._
 import org.scalatest.matchers._

@@ -4,6 +4,7 @@ import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 
 import insynth.testdomain._
+import insynth.common._
 
 class DeclarationTest extends FunSuite with ShouldMatchers {
   

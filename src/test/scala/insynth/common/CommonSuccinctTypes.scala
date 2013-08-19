@@ -1,4 +1,4 @@
-package insynth.testdomain
+package insynth.common
 
 import insynth.structures._
 

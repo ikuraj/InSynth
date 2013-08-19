@@ -1,6 +1,8 @@
-package insynth.testdomain
+package insynth.common
 
 import insynth.structures._
+
+import insynth.testdomain._
 
 object CommonDeclarations {
   
