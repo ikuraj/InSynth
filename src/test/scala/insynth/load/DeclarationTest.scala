@@ -27,5 +27,9 @@ class DeclarationTest extends FunSuite with ShouldMatchers {
   test("declarations should have default weight 1.0f") {
   	booleanDeclaration should equal(TestDeclaration(dt.typeBoolean, st.typeBoolean, 1f))
   }
-  
+
+  test("declarations created through factory methods should be the same") {
+    TestDeclaration(dt.typeInt) should equal (TestDeclaration(dt.typeInt))
+    TestDeclaration(dt.typeInt, "name") should equal (TestDeclaration(dt.typeInt, "name"))
+  }  
 }
