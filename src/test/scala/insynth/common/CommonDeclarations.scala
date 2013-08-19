@@ -24,6 +24,10 @@ object CommonDeclarations {
     functionIntToIntType
   )
   
+  val threeParFunctionDeclaration = TestDeclaration(     
+    threeParFunctionType
+  )
+  
   val functionFunsToFunDeclaration = TestDeclaration(
     functionFunsToFunType
   )
