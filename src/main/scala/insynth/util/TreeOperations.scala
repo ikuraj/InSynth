@@ -55,6 +55,27 @@ object ProofTreeOperations {
 	  }
 	}
 	
+	def getSubtrees(sn: SimpleNode, names: StringNode): Set[SimpleNode] = {
+		  val visibleNames = 
+		    for (decl <- sn.getDecls)
+		      yield decl.getSimpleName
+		  
+		  if (visibleNames contains names.name) {
+			  if (!names.nodes.isEmpty) 
+	        (for (innerStringNode <- names.nodes)
+	          yield 
+	          	(for (innerContainer <- sn.getParams.values; val innerNodes = innerContainer.getNodes;
+	          		innerNode <- innerNodes)
+	          	  yield
+		            	getSubtrees(innerNode, innerStringNode)
+	          	).reduce(_ | _)
+        	).reduce(_ | _)
+		    else
+		      Set(sn)
+		  }
+		  else Set.empty
+	}
+	
 	def breadthFirstSearchPrint(sn: SimpleNode): String = {
 	  val stringWriter = new StringWriter
 	  breadthFirstSearchPrint(sn, new PrintWriter(stringWriter, true))
