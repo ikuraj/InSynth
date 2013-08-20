@@ -19,7 +19,3 @@ libraryDependencies += "junit" % "junit" % "4.8" % "test"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.10-M3" % "test"
 
 //libraryDependencies += "com.dongxiguo" %% "zero-log" % "0.1.2"
-
-EclipseKeys.skipParents in ThisBuild := false
-
-sound.play(compile in Compile, Sounds.Basso) // play the 'Basso' sound whenever compile completes (successful or not)
