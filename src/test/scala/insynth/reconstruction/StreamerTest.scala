@@ -72,14 +72,25 @@ class StreamerTest extends JUnitSuite {
     for (exp <- listOfExpressions)
     	assertTrue(expressions.toSet contains exp)
     	
-    val listOfExpressionsOrder = List(boolInv, inv1WithBoolInv, inv2WithInt,
-      inv2WithBoolInv, inv3WithBoolInv)
+  	{
+	    val listOfExpressionsOrder = List(boolInv, inv2WithInt,
+	      inv2WithBoolInv, inv3WithBoolInv)
+	    
+	    for (ind <- 0 until listOfExpressionsOrder.size - 1)
+	      assertTrue("Expression " + listOfExpressionsOrder(ind) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind)) +
+	        ") should occur before expression " + listOfExpressionsOrder(ind+1) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind + 1)) + ")",
+	        expressions.indexOf(listOfExpressionsOrder(ind)) < expressions.indexOf(listOfExpressionsOrder(ind+1)))
+  	}
     
-    for (ind <- 0 until listOfExpressionsOrder.size - 1)
-      assertTrue("Expression " + listOfExpressionsOrder(ind) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind)) +
-        ") should occur before expression " + listOfExpressionsOrder(ind+1) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind + 1)) + ")",
-        expressions.indexOf(listOfExpressionsOrder(ind)) < expressions.indexOf(listOfExpressionsOrder(ind+1)))
-      
+  	{
+	    val listOfExpressionsOrder = List(boolInv, inv1WithBoolInv,
+	      inv2WithBoolInv, inv3WithBoolInv)
+	    
+	    for (ind <- 0 until listOfExpressionsOrder.size - 1)
+	      assertTrue("Expression " + listOfExpressionsOrder(ind) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind)) +
+	        ") should occur before expression " + listOfExpressionsOrder(ind+1) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind + 1)) + ")",
+	        expressions.indexOf(listOfExpressionsOrder(ind)) < expressions.indexOf(listOfExpressionsOrder(ind+1)))
+  	}
   }
 
 }

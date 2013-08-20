@@ -89,7 +89,7 @@ class StreamCombinationsTest extends JUnitSuite {
 
   @Test
   def testBinaryStreamLoopEvaluationNoThrow {
-    val stream1 = getSingleStream(1 #:: (throw new RuntimeException) #:: Stream.empty[Int], false)
+    val stream1 = getSingleStream(1 #:: (throw new RuntimeException) #:: Stream.empty[Int], true)
 
     val rr = LazyRoundRobbin(List(stream1))
 

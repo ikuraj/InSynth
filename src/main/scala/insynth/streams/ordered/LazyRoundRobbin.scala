@@ -1,100 +1,59 @@
 package insynth.streams.ordered
 
-import insynth.streams.{ Streamable, AddStreamable }
+import insynth.streams._
 
 import insynth.util.logging.HasLogger
 
-class LazyRoundRobbin[T](val initStreams: List[OrderedSizeStreamable[T]])
-	extends OrderedSizeStreamable[T] with AddStreamable[T] with HasLogger {
-  if (initStreams.isEmpty)
-    println("creating initStreams is empty!!!")
+class LazyRoundRobbin[T](val initStreamsIn: List[OrderedStreamable[T]])
+	extends OrderedStreamable[T] with AddStreamable[T] with HasLogger {
+
+  override def isInfinite: Boolean = 
+    if (initialized) innerRoundRobbin.isInfinite
+    else false
+    
+  override def isDepleted: Boolean = 
+    if (initialized) innerRoundRobbin.isDepleted
+    else false
+    
+  override def nextReady(ind: Int): Boolean = 
+    if (initialized) innerRoundRobbin.nextReady(ind)
+    else false
   
   var initialized = false
       
-  var streams: List[OrderedSizeStreamable[T]] = List.empty
+  var streams: List[OrderedStreamable[T]] = initStreamsIn
   
   override def getStreams = streams
     
   var innerRoundRobbin: RoundRobbin[T] = _
   
-  // XXX terrible hack, fix this
+  // XXX terrible hack, since adding non-ordered streamable will break the code
   override def addStreamable[U >: T](s: Streamable[U]) =
-    streams :+= (s.asInstanceOf[OrderedSizeStreamable[T]])
+    streams :+= (s.asInstanceOf[OrderedStreamable[T]])
   
-  // XXX terrible hack, fix this
   override def addStreamable[U >: T](s: Iterable[Streamable[U]]) =
-    streams ++= (s.asInstanceOf[Iterable[OrderedSizeStreamable[T]]])
+    streams ++= (s.asInstanceOf[Iterable[OrderedStreamable[T]]])
   
   override def isInitialized = initialized
-  
-  override def isInfinite = 
-    if (initialized) initStreams.exists( _.isInfinite )//innerRoundRobbin.isInfinite
-    else false
-      
-  private def getMinIndex = {
-    
-		val valueIterators = initStreams map { _.getValues.iterator.buffered }
-    
-    var min = Int.MaxValue
-    var minInd = -1
-    var ind = 0
-    while (ind < valueIterators.size) {
-      val indToCheck = ind % valueIterators.size
-      
-      if (valueIterators(indToCheck).hasNext && valueIterators(indToCheck).head < min) {
-      	min = valueIterators(indToCheck).head
-  			minInd = indToCheck
-      }        
-        
-      ind += 1
-    }
-    
-    //assert(minInd > -1, "minInd > -1")
-    exiting("getMinIndex", (min, minInd).toString)
-    (min, minInd)
-  }
-  
-  lazy val (minValue, minInd) = getMinIndex
-  
-  lazy val mappedInitStreams = initStreams.zipWithIndex map {
-    p =>
-    	if (p._2 == minInd)
-    	  SingleStream((p._1.getStream zip p._1.getValues).tail, p._1.isInfinite)
-  	  else p._1
-  }
     
   private def produceRoundRobbin = {
     if (innerRoundRobbin == null)
-    	innerRoundRobbin = RoundRobbin[T]((mappedInitStreams ++ streams).toSeq)
+    	innerRoundRobbin = RoundRobbin[T](getStreams)
   	innerRoundRobbin
   } 
   
   override def initialize = {    
-    // important to first initialize
-    // NOT??
-    //produceRoundRobbin
+    produceRoundRobbin
     initialized = true
   }
     
-  lazy val stream = 
-    if (minInd > -1) initStreams(minInd).getStream.head #:: produceRoundRobbin.getStream
-    else Stream.empty    
+  lazy val stream = produceRoundRobbin.getStream
   
-  override def getStream = {
-    info("initialized " + initialized)
-    
-    if (initialized) stream
-    else Stream.Empty
-  }
+  override def getStream = stream
   
-  override def getValues = 
-    if (initialized && minInd > -1) {
-      assert(minInd > -1)
-      minValue #:: produceRoundRobbin.getValues
-    }
-    else Stream.Empty
+  override def getValues = produceRoundRobbin.getValues
 }
 
 object LazyRoundRobbin {
-	def apply[T](initStreams: List[OrderedSizeStreamable[T]]) = new LazyRoundRobbin(initStreams)
+	def apply[T](initStreams: List[OrderedStreamable[T]]) = new LazyRoundRobbin(initStreams)
 }

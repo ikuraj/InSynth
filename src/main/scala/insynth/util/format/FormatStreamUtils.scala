@@ -47,8 +47,13 @@ class FormatStreamUtils[_](node: Streamable[_], _level: Int) extends Formatable 
     
     val resDocument: Document =
     node match {
+      case _: ordered.Singleton[_] => "ord.Singleton" :: header(node)
       case _: Singleton[_] => "Singleton" :: header(node)
+
       case ss: SingleStream[_, _] => "SingleStream" :: header(node)// :: paren(trans(ss.stream, level - 1))
+      
+      case us: ordered.UnaryStream[_, _] => "ord.UnaryStream" :: header(node) ::
+      	paren(trans(us.streamable, level - 1, visited + node))
       case us: UnaryStream[_, _] => "UnaryStream" :: header(node) ::
       	paren(trans(us.streamable, level - 1, visited + node))
 //      case irr: InitializingRoundRobin[_] => "InitializingRoundRobin" :: header(node) :: nestedBrackets(
@@ -65,24 +70,27 @@ class FormatStreamUtils[_](node: Streamable[_], _level: Int) extends Formatable 
 //    	    else
 //    	      DocNil
 //      	}
-      case bs: BinaryStream[_, _, _] => "BinaryStream" :: header(node) :: nestedBrackets(
-        paren(trans(bs.s1, level -1, visited + node)) :/: paren(trans(bs.s2, level -1, visited + node))
-      )
-      case Empty => "Empty"
-      case ordered.Empty => "ord.Empty"
-      case lrr: ordered.LazyRoundRobbin[_] => "ord.LazyRoundRobbin" :: header(node) :: nestedBrackets(
-        ((DocNil: Document) /: lrr.getStreams) { (res, doc) => res :/: trans(doc, level - 1, visited + node) }
-      )
+      	      
       case obs: ordered.BinaryStream[_, _, _] => "ord.BinaryStream" :: header(node) :: nestedBrackets(
         paren(trans(obs.s1, level -1, visited + node)) :/: paren(trans(obs.s2, level -1, visited + node))
       )
-//      case lrr: insynth.util.streams.ordered.LazyOnlyRoundRobbin[_] => "LazyOnlyRoundRobbin" :: header(node) ::
-//      nestedBrackets(
-//        ((DocNil: Document) /: lrr.getStreams) { (res, doc) => res :/: trans(doc, level - 1, visited + node) }
-//      )
-//      case rr: insynth.util.streams.ordered.CareRoundRobbin[_] => "CareRoundRobin" :: header(node) :: nestedBrackets(
-//        ((DocNil: Document) /: rr.streams) { (res, doc) => res :/: trans(doc, level - 1, visited + node) }
-//      )
+      case bs: BinaryStream[_, _, _] => "BinaryStream" :: header(node) :: nestedBrackets(
+        paren(trans(bs.s1, level -1, visited + node)) :/: paren(trans(bs.s2, level -1, visited + node))
+      )
+      
+      case ordered.Empty => "ord.Empty"
+      case Empty => "Empty"
+
+      case lrr: LazyRoundRobbin[_] => "LazyRoundRobbin" :: header(node) :: nestedBrackets(
+        ((DocNil: Document) /: lrr.getStreams) { (res, doc) => res :/: trans(doc, level - 1, visited + node) }
+      )
+      case lrr: ordered.LazyRoundRobbin[_] => "ord.LazyRoundRobbin" :: header(node) :: nestedBrackets(
+        ((DocNil: Document) /: lrr.getStreams) { (res, doc) => res :/: trans(doc, level - 1, visited + node) }
+      )
+
+      case rr: ordered.RoundRobbin[_] => "ord.RoundRobin" :: header(node) :: nestedBrackets(
+        ((DocNil: Document) /: rr.streams) { (res, doc) => res :/: trans(doc, level - 1, visited + node) }
+      )
       case rr: RoundRobbin[_] => "RoundRobin" :: header(node) :: nestedBrackets(
         ((DocNil: Document) /: rr.streams) { (res, doc) => res :/: trans(doc, level - 1, visited + node) }
       )

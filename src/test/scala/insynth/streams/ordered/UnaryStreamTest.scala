@@ -6,7 +6,9 @@ import org.scalatest.junit.JUnitSuite
 import org.junit.Assert._
 import org.junit.Test
 
-class UnaryStreamTest extends JUnitSuite {    
+class UnaryStreamTest extends JUnitSuite {
+  
+  import Utils.getSingleStream
     
   @Test
   def testUnaryStream = {
@@ -14,7 +16,7 @@ class UnaryStreamTest extends JUnitSuite {
     {
 	    val finiteStream = List(1,2,4).toStream
 	    
-	    val streamable1 = SingleStream(finiteStream zip finiteStream, false)
+	    val streamable1 = getSingleStream(finiteStream, false)
 	    val streamable2 = UnaryStream(streamable1, { x: Int => x + 1 })
 	    
 	    assertFalse(streamable2.isInfinite)
@@ -35,7 +37,7 @@ class UnaryStreamTest extends JUnitSuite {
     {
 	    val finiteStream = List(1,2,4).toStream
 	    
-	    val streamable1 = SingleStream(finiteStream zip finiteStream, false)
+	    val streamable1 = getSingleStream(finiteStream, false)
 	    val streamable2 = UnaryStream(streamable1, { x: Int => x + 1 }, Some(identity))
 	    
 	    assertFalse(streamable2.isInfinite)
@@ -56,7 +58,7 @@ class UnaryStreamTest extends JUnitSuite {
     {
 	    val finiteStream = List(1,2,4).toStream
 	    
-	    val streamable1 = SingleStream(finiteStream zip finiteStream, false)
+	    val streamable1 = getSingleStream(finiteStream, false)
 	    val streamable2 = UnaryStream(streamable1, { x: Int => x + 1 }, Some(_ + 1))
 	    
 	    assertFalse(streamable2.isInfinite)

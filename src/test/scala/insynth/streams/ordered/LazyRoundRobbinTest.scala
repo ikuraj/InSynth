@@ -138,7 +138,7 @@ class LazyRoundRobbinTest extends JUnitSuite {
 
     val rr = LazyRoundRobbin(streams)
 
-    val us = getSingleStream(UnaryStream(rr, { (_: Int) + 1 }).getStream, true)
+    val us = UnaryStream(rr, { (_: Int) + 1 }, Option({ (_: Int) + 1 }))
     val ss2 = getSingleStream(5)
     
     rr addStreamable us
@@ -163,7 +163,7 @@ class LazyRoundRobbinTest extends JUnitSuite {
 
     val rr = LazyRoundRobbin(streams)
 
-    val us = getSingleStream(UnaryStream(rr, { (_: Int) + 1 }).getStream, true)
+    val us = UnaryStream(rr, { (_: Int) + 1 }, Option({ (_: Int) + 1 }))
     val ss2 = getSingleStream(2)
     
     rr addStreamable us

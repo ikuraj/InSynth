@@ -6,7 +6,7 @@ import insynth.reconstruction.{ intermediate => int }
 import insynth.reconstruction.{ stream => lambda }
 
 import insynth.streams._
-import insynth.streams.ordered.OrderedSizeStreamable
+import insynth.streams.OrderedStreamable
 
 import insynth.util.logging.HasLogger
 import insynth.util.format.{ FormatIntermediate, FormatStreamUtils }
@@ -63,7 +63,7 @@ class Extractor(streamBuilder: StreamFactory[Node])
     //exiting("apply", ("" /: (result take 1)) { (string, el) => string + "\n" + FormatIntermediate(el) })
 
     transformed match {
-      case os: OrderedSizeStreamable[_] =>
+      case os: OrderedStreamable[_] =>
         fine("returning ordered streamable")
         os.getStream zip os.getValues.map(_.toFloat)
       case _: Streamable[_] =>

@@ -1,5 +1,7 @@
 package insynth.streams.ordered
 
+import insynth.streams.ordered.{ SingleStream => _ }
+
 import scala.util.Random
 
 import org.scalatest.junit.JUnitSuite
@@ -14,6 +16,27 @@ class BinaryStreamTest extends JUnitSuite {
   def testBinaryStreamBefore {    
     val stream1 = getSingleStream(1)        
     val stream2 = getSingleStream(2)
+    
+    assertFalse(stream1.getStream.isEmpty)
+    assertFalse(stream1.getValues.isEmpty)
+    assertFalse(stream2.getStream.isEmpty)
+    assertFalse(stream2.getValues.isEmpty)
+        
+    val bs = BinaryStream(stream2, stream1) {
+      (x, y) => x * y
+    }
+    
+    val stream = bs.getStream
+    
+    assertFalse(stream.isEmpty)
+    assertEquals(2, stream.head)
+    assertEquals(3, bs.getValues.head)
+  }
+  
+  @Test
+  def testBinaryWithSingletons {    
+    val stream1 = Singleton(1)        
+    val stream2 = Singleton(2)
         
     val bs = BinaryStream(stream2, stream1) {
       (x, y) => x * y
@@ -22,7 +45,7 @@ class BinaryStreamTest extends JUnitSuite {
     val stream = bs.getStream
     
     assertEquals(2, stream.head)
-    assertEquals(3, bs.getValues.head)
+    assertEquals(2, bs.getValues.head)
   }
       
   trait Combination
@@ -39,8 +62,8 @@ class BinaryStreamTest extends JUnitSuite {
 	    val finiteStream1 = List[Number](1,4,6) zip List(1, 4, 6)
 	    val finiteStream2 = List[Number](2,5,6) zip List(2, 5, 6)
 	    
-	    val streamable1 = SingleStream(finiteStream1.toStream)
-	    val streamable2 = SingleStream(finiteStream2.toStream)
+	    val streamable1 = getSingleStream(finiteStream1.toStream)
+	    val streamable2 = getSingleStream(finiteStream2.toStream)
 	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
@@ -199,8 +222,8 @@ class BinaryStreamTest extends JUnitSuite {
 	      Stream.from(randomInt1) map { int => (int: Combination, int) }
 	    val finiteStream2 = List[Number](1,2, 3).toStream zip List(1, 2, 3)
 	    
-	    val streamable1 = SingleStream(infiniteStream1, true)
-	    val streamable2 = SingleStream(finiteStream2, false)
+	    val streamable1 = getSingleStream(infiniteStream1, true)
+	    val streamable2 = getSingleStream(finiteStream2, false)
 	    
       {
         val bs = BinaryStream(streamable1, streamable2) {
