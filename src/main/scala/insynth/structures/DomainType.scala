@@ -1,5 +1,10 @@
 package insynth.structures
 
+// enable implicit conversions
+import scala.language.implicitConversions
+// enable postfix operators
+import scala.language.postfixOps
+
 /**
  * DomainType is here so that early reconstruction phases know
  * the structure of types without the need to know the actual

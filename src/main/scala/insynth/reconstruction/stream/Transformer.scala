@@ -1,6 +1,10 @@
 package insynth.reconstruction.stream
 
 import scala.annotation.tailrec
+
+// enable postfix operators
+import scala.language.postfixOps
+
 import scala.collection.mutable.{
   Map => MutableMap,
   LinkedList => MutableList,
@@ -204,7 +208,7 @@ class Transformer(streamBuilder: StreamFactory[Node])
         			// parameter type that corresponds to parameterTypeInSynth
         			val parameterType = {
         			  val listOfCorrespondingDomainTypes =
-	        			  for (decl <- node.getDecls; val tpe = decl.getDomainType;
+	        			  for (decl <- node.getDecls; tpe = decl.getDomainType;
         			  		if (tpe.isInstanceOf[FunctionType]);
         			  		parTpe <- tpe.asInstanceOf[FunctionType].args
 	      			  		if parTpe.toSuccinctType == parameterTypeInSynth)

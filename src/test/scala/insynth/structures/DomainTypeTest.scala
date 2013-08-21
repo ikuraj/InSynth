@@ -5,6 +5,9 @@ import scala.util.Random
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 
+// enable implicit conversions
+import scala.language.implicitConversions
+
 class DomainTypeTest extends FunSuite with ShouldMatchers {    
   
 	implicit def singletonList(x: DomainType) = List(x)

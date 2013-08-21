@@ -26,7 +26,7 @@ object ProofTreeOperations {
 	
 	def checkInhabitants(cn: ContainerNode, names: StringNode): Boolean = {	  
   	(for (outerInnerNode <- cn.getNodes; innerContainer <- outerInnerNode.getParams.values;
-			val innerNodes = innerContainer.getNodes;	innerNode <- innerNodes)
+			innerNodes = innerContainer.getNodes;	innerNode <- innerNodes)
   	  yield
       	checkInhabitants(innerNode, names)
   	).reduce(_ || _)
@@ -42,7 +42,7 @@ object ProofTreeOperations {
 	      if (visibleNames contains currentName)
 	        (for (innerStringNode <- set)
 	          yield 
-	          	(for (innerContainer <- sn.getParams.values; val innerNodes = innerContainer.getNodes;
+	          	(for (innerContainer <- sn.getParams.values; innerNodes = innerContainer.getNodes;
 	          		innerNode <- innerNodes)
 	          	  yield
 		            	checkInhabitants(innerNode, innerStringNode)
@@ -64,7 +64,7 @@ object ProofTreeOperations {
 			  if (!names.nodes.isEmpty) 
 	        (for (innerStringNode <- names.nodes)
 	          yield 
-	          	(for (innerContainer <- sn.getParams.values; val innerNodes = innerContainer.getNodes;
+	          	(for (innerContainer <- sn.getParams.values; innerNodes = innerContainer.getNodes;
 	          		innerNode <- innerNodes)
 	          	  yield
 		            	getSubtrees(innerNode, innerStringNode)

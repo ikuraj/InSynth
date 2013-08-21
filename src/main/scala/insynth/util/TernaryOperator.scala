@@ -1,5 +1,8 @@
 package insynth.util
   
+// enable implicit conversions
+import scala.language.implicitConversions
+
 // ternary operator support
 case class Bool(b: Boolean) {
   def ?[X](t: => X) = new { 

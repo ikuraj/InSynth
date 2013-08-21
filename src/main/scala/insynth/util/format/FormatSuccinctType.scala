@@ -4,6 +4,9 @@ import scala.text.Document._
     
 import insynth.structures._
 
+// enable implicit conversions
+import scala.language.implicitConversions
+
 class FormatSuccinctType(tpe: SuccinctType) extends Formatable {
   import insynth.util.format.FormatHelpers._
   

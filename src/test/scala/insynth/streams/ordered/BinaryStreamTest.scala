@@ -8,6 +8,9 @@ import org.scalatest.junit.JUnitSuite
 import org.junit.Assert._
 import org.junit.Test
 
+// enable implicit conversions
+import scala.language.implicitConversions
+
 class BinaryStreamTest extends JUnitSuite {    
   
   import Utils._
@@ -67,9 +70,9 @@ class BinaryStreamTest extends JUnitSuite {
 	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
-		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
+//		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
+//		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
+//		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
 		    
@@ -122,8 +125,8 @@ class BinaryStreamTest extends JUnitSuite {
 	    	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
+//		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
+//		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -176,8 +179,8 @@ class BinaryStreamTest extends JUnitSuite {
 	    	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
+//		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
+//		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -227,8 +230,8 @@ class BinaryStreamTest extends JUnitSuite {
 	    
       {
         val bs = BinaryStream(streamable1, streamable2) {
-          case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-          case (x: Number, y: NumberList) => NumberList(x +: y.list)
+//          case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
+//          case (x: Number, y: NumberList) => NumberList(x +: y.list)
           case (x: NumberList, y: Number) => NumberList(x.list :+ y)
           case (x: Number, y: Number) => NumberList(List(x, y))
         }

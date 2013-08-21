@@ -1,14 +1,16 @@
 name := "InSynth"
 
-version := "2.0"
+version := "2.1"
 
 organization := "ch.epfl.lara"
 
-scalaVersion := "2.9.3"
+scalaVersion := "2.10.2"
 
 scalacOptions += "-deprecation"
 
 scalacOptions += "-unchecked"
+
+scalacOptions += "-feature"
 
 javacOptions += "-Xlint:unchecked"
 

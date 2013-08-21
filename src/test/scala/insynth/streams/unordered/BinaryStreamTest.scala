@@ -8,6 +8,9 @@ import org.junit.Test
 
 import insynth.streams.Streamable
 
+// enable implicit conversions
+import scala.language.implicitConversions
+
 class BinaryStreamTest extends JUnitSuite {    
   
   def printStream[A](stream: Stream[A])(n: Int) = stream.take(n).toList mkString (", ")
@@ -45,8 +48,8 @@ class BinaryStreamTest extends JUnitSuite {
 	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
+//		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
+//		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -65,8 +68,6 @@ class BinaryStreamTest extends JUnitSuite {
       
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -84,8 +85,6 @@ class BinaryStreamTest extends JUnitSuite {
 	    }
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -131,8 +130,6 @@ class BinaryStreamTest extends JUnitSuite {
 	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -161,8 +158,6 @@ class BinaryStreamTest extends JUnitSuite {
       
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -191,8 +186,6 @@ class BinaryStreamTest extends JUnitSuite {
 	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -238,8 +231,6 @@ class BinaryStreamTest extends JUnitSuite {
 	    
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -286,8 +277,6 @@ class BinaryStreamTest extends JUnitSuite {
       
 	    {
 		    val bs = BinaryStream(streamable1, streamable2) {
-		      case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-		      case (x: Number, y: NumberList) => NumberList(x +: y.list)
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
@@ -325,8 +314,6 @@ class BinaryStreamTest extends JUnitSuite {
 
       {
         val bs = BinaryStream(streamable1, streamable2) {
-          case (x: NumberList, y: NumberList) => NumberList(x.list ++ y.list)
-          case (x: Number, y: NumberList) => NumberList(x +: y.list)
           case (x: NumberList, y: Number) => NumberList(x.list :+ y)
           case (x: Number, y: Number) => NumberList(List(x, y))
         }

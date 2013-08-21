@@ -50,7 +50,7 @@ class Solver(declarations: List[Declaration], queryBuilder: QueryBuilder, timeOu
 
     if (solution != null) {
       info("Solution found in " + (System.currentTimeMillis - time) + " ms.")
-      finer("Solution found: " + TreePrinter(solution, 3))
+      finest("Solution found: " + TreePrinter(solution, 3))
     } else 
       info("No solution found in " + (System.currentTimeMillis - time) + " ms")
     
