@@ -1,7 +1,5 @@
 package insynth.util.logging
 
-import scala.util.logging.{ Logged, ConsoleLogger }
-
 /** 
  * Classes can mix this trait for having access to the "default" {{{logger}}}.
  *  
@@ -11,26 +9,26 @@ trait HasLogger {
   
   protected[this] def getMyClass = this.getClass
   
-  protected[this] lazy val (logger, formatter) =
-    LoggerFactory.newLogger(getMyClass.toString)
-  
-  import formatter._
-  
-  def warning(msg: => String) = logger.warning(msg)        		   
+  protected[this] lazy val logger =
+	LoggerFactory.newLogger(getMyClass.getName)      		   
     
-  def severe(msg: => String) = logger.severe(msg)
+  def severe(msg: => String) = logger.fatal(msg)
+
+  def error(msg: => String) = logger.error(msg)
+  
+  def warning(msg: => String) = logger.warn(msg)  
      
   def info(msg: => String) = logger.info(msg)
    
-  def fine(msg: => String) = logger.fine(msg)
+  def fine(msg: => String) = logger.debug(msg)
    
-  def finer(msg: => String)  = logger.finer(msg)
+  def finer(msg: => String)  = logger.debug(msg)
    
-  def finest(msg: => String) = logger.finest(msg)
+  def finest(msg: => String) = logger.trace(msg)
      
   def entering(method: => String, arguments: Any*) =
-	  logger.finest("Entering " + getMyClass + "." + method)
+	  logger.trace("Entering " + getMyClass + "." + method)
      
   def exiting(method: => String, result: => String) =
-	  logger.finest("Exiting " + getMyClass + "." + method + " with " + result)
+	  logger.trace("Exiting " + getMyClass + "." + method + " with " + result)
 }

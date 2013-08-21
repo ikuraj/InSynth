@@ -20,4 +20,9 @@ libraryDependencies += "junit" % "junit" % "4.8" % "test"
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.10-M3" % "test"
 
-//libraryDependencies += "com.dongxiguo" %% "zero-log" % "0.1.2"
+// logging facilities
+libraryDependencies ++= Seq(
+  "com.typesafe" %% "scalalogging-log4j" % "1.0.1",
+  "org.apache.logging.log4j" % "log4j-api" % "2.0-beta3",
+  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta3"
+)
