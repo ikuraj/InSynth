@@ -4,7 +4,7 @@ import org.scalatest.junit.JUnitSuite
 import org.junit.{ Test, Ignore }
 import org.junit.Assert._
 
-import insynth.common.{ CommonIntermediate, CommonDeclarations, CommonLambda }
+import insynth.common.{ CommonDeclarations, CommonLambda }
 
 class LambdaTreesTest extends JUnitSuite {
 

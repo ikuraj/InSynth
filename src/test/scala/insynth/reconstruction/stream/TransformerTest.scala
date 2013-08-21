@@ -1,27 +1,31 @@
-package insynth.reconstruction
+package insynth.reconstruction.stream
 
-import insynth.structures.{ Function => FunctionType, _ }
 import insynth.reconstruction.{ stream => lambda }
-import insynth.reconstruction.stream._
 
 import org.scalatest.junit.JUnitSuite
 import org.junit.{ Test, Ignore }
 import org.junit.Assert._
 
-import insynth.common._
-import insynth.testdomain.{ TestDeclaration => Declaration }
+import insynth.util.format._
 
-class OrderedExtractorTest extends JUnitSuite {
+import insynth.common.{ CommonProofTrees, CommonDeclarations, CommonLambda }
+
+class TransformerTest extends JUnitSuite {
 
   import CommonDeclarations._
-  import CommonLambda._
   import CommonProofTrees._
+  import CommonLambda._
     
-  val extractor = new Transformer(new OrderedStreamFactory)
+  val transformer = new Transformer(new OrderedStreamFactory)
   
   val maxElToOutput = 20
   
   import lambda.Node._
+  
+  def interactivePause = {
+    System.out.println("Press Any Key To Continue...");
+    new java.util.Scanner(System.in).nextLine();
+  }
   
   def assertWeight(lambdaNode: lambda.Node, weight: Float) =
     assertEquals(size(lambdaNode), weight, 0f)
@@ -33,6 +37,10 @@ class OrderedExtractorTest extends JUnitSuite {
     assertEquals("Node " + pair._1, size(pair._1), pair._2, 0f)	    
     
   def assertTake(stream: Stream[(lambda.Node, Float)], num: Int) = {
+    for (ind <- 0 until num) {
+    	stream(ind)
+//    	interactivePause
+    }      
     val result = stream take num
     val message = "Part of the resulting stream: " + result.take(maxElToOutput).mkString("\n")
     
@@ -45,9 +53,11 @@ class OrderedExtractorTest extends JUnitSuite {
       
   @Test
   def treeReconstructBooleanToIntIntermediate: Unit = {  
-    val extractorResults = assertTake(extractor(exampleBoolToInt._1), 1)
+  	// println(FormatSuccinctNode(exampleBoolToInt._1, 100))
+    val extractorResults = assertTake(transformer(exampleBoolToInt._1), 1)
     
     assertEquals(1, extractorResults.size)
+    assertEquals(transformer(exampleBoolToInt._1), extractorResults)
     
     for ( ((node, weight), lambdaNode) <- extractorResults zip constructBooleanToIntIntermediateLambda ) {
 	    assertEquals(lambdaNode, node)	    
@@ -58,11 +68,10 @@ class OrderedExtractorTest extends JUnitSuite {
   
   @Test
   def treeIntToIntRec: Unit = {
-    
     val intermediateTree = exampleIntToInt
             
     def confirmResults(num: Int) = {
-	    val extractorResults = assertTake(extractor(intermediateTree), num)   
+	    val extractorResults = assertTake(transformer(intermediateTree), num)   
 	    assertEquals(num, extractorResults.size)
 	    
 	    for ( ((node, _), lambdaNode) <- extractorResults zip constructIntToIntIntermediateFirstLambda(num))		  
@@ -79,7 +88,7 @@ class OrderedExtractorTest extends JUnitSuite {
     def confirmResults(num: Int) = {
       // take two times this number of elements because we have two roots of recursion
       // take two times more to be sure that extractor extracts needed trees (node the non-determinism)
-	    val extractorResults = assertTake(extractor(intermediateTree), (num * 2 * 2)) map { _._1 }	    
+	    val extractorResults = assertTake(transformer(intermediateTree), (num * 2 * 2)) map { _._1 }	    
 	    assertEquals(num * 4, extractorResults.size)
 	    	  
 	    val message = "Extracted " + extractorResults.zipWithIndex.map(p => p._2 + ": " + p._1).mkString("\n")

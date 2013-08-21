@@ -3,8 +3,6 @@ package insynth.reconstruction.stream
 import insynth.load.Declaration
 import insynth.structures.DomainType
 
-import insynth.reconstruction.{ intermediate => int }
-
 /**
  * can return the type of the (sub)tree
  */
@@ -20,35 +18,12 @@ abstract class Node extends Typable //with Nameable
 
 object Node {
   
-  implicit def IntermediateToLambdaNode(inNode: int.Node): Node = 
-	  inNode match {
-    	case int.Identifier(tpe, decl) => Identifier(tpe, decl) 
-    	case int.Variable(tpe, name) => Variable(tpe, name) 
-    	case int.NullLeaf => NullLeaf
-    	case _ => throw new RuntimeException
-	  }  
-  
-  implicit def IntermediateIdentToLambdaNode(inNode: int.Identifier): Identifier = 
-	  inNode match {
-    	case int.Identifier(tpe, decl) => Identifier(tpe, decl) 
-	  }
-  
-  implicit def IntermediateVarToLambdaNode(inNode: int.Variable): Variable = 
-	  inNode match {
-    	case int.Variable(tpe, name) => Variable(tpe, name) 
-	  }
-  
   def size(inNode: Node): Int = inNode match {
   	case _: Identifier | _: Variable | NullLeaf => 1
   	case Application(_, params) => 1 + params.tail.map(size).sum
   	case Abstraction(_, vars, body) => vars.size + size(body)
   	case _ => throw new RuntimeException    
   }
-  
-//  implicit def IntermediateToLambdaNode(inNode: int.NullLeaf): Node = 
-//	  inNode match {
-//    	case int.NullLeaf => NullLeaf 
-//	  }
   
 }
 
