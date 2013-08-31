@@ -1,6 +1,6 @@
 name := "InSynth"
 
-version := "2.1"
+version := "1.3"
 
 organization := "ch.epfl.lara"
 
