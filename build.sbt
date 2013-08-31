@@ -26,3 +26,7 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.0-beta3",
   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta3"
 )
+
+seq(ScctPlugin.instrumentSettings : _*)
+
+seq(com.github.theon.coveralls.CoverallsPlugin.coverallsSettings: _*)
