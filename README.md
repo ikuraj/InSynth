@@ -2,6 +2,7 @@ InSynth core
 ============
 
 [![Build Status](https://travis-ci.org/kaptoxic/InSynth.png?branch=master)](https://travis-ci.org/kaptoxic/InSynth)
+[![Coverage Status](https://coveralls.io/repos/kaptoxic/InSynth/badge.png?branch=master)](https://coveralls.io/r/kaptoxic/InSynth?branch=master)
 
 Central repository for managing the implementation of the InSynth solver and reconstructor, independent of the domain language.
 It represents the core framework that implements the main algorithms for type inhabitation and lazy enumeration of inhabitants.
