@@ -12,7 +12,7 @@ object BottomType extends SuccinctType
   
 case class Const(val name: String) extends SuccinctType
 case class Instance(val name: String, val t: List[SuccinctType]) extends SuccinctType
-case class Arrow(val paramType:TSet, val returnType:SuccinctType) extends SuccinctType
+case class Arrow(val paramType: TSet, val returnType: SuccinctType) extends SuccinctType
 
 // TODO: Maybe find better representation
 case class TSet(val list:List[SuccinctType]) extends SuccinctType {  

@@ -12,6 +12,12 @@ class SimpleNode(decls:List[Declaration], params:Map[Type, ContainerNode]) exten
   def getParams = params
 }
 
+object SimpleNode {
+  
+  def apply(decls:List[Declaration], params:Map[Type, ContainerNode]) =
+    new SimpleNode(decls, params)  
+}
+
 /**
  * container for tree nodes
  */
@@ -24,4 +30,10 @@ class ContainerNode(var nodes: Set[SimpleNode]) extends Node {
   }
   
   def getNodes = nodes
+}
+
+object ContainerNode {
+  
+  def apply(nodes: Set[SimpleNode]) = new ContainerNode(nodes)
+  
 }

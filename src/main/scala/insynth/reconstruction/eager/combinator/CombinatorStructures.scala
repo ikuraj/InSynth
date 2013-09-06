@@ -1,16 +1,13 @@
-package ch.epfl.insynth.reconstruction.combinator
+package insynth.reconstruction.eager.combinator
 
 import scala.math.min
 
-import ch.epfl.insynth.{ env => InSynth }
-import ch.epfl.insynth.trees.{ Type, BottomType }
-import ch.epfl.insynth.trees.FormatType
-import ch.epfl.insynth.reconstruction.intermediate.NullLeaf
-import ch.epfl.insynth.env.FormatNode
-import ch.epfl.insynth.reconstruction.Config
-import ch.epfl.insynth.env.FormatNode
+import insynth.load.Declaration
+import insynth.{ structures => InSynth }
+import insynth.structures.{ SuccinctType => Type, _ }
 
-import java.util.logging.{ Logger, Level, ConsoleHandler, FileHandler, SimpleFormatter }
+import insynth.util.logging.HasLogger
+import insynth.util.format.{ FormatSuccinctNode => FormatNode, _ }
 
 // TODO set required combinations in each Tree node after we hit the limit in the top
 // tree
@@ -25,6 +22,8 @@ import java.util.logging.{ Logger, Level, ConsoleHandler, FileHandler, SimpleFor
 object Rules {  
   // if the pruning started
   var doPruning = false
+
+  val BottomType = Atom(InSynth.BottomType)
 }
 
 /**
@@ -43,10 +42,10 @@ trait Combinations {
   def isDone: Boolean
   
   // get weight value with respect to the traversal
-  def getTraversalWeight: Double
+  def getTraversalWeight: Float
   
   // get weight value of the computed tree
-  def getMinComputedWeight: Double
+  def getMinComputedWeight: Float
 }
 
 /**
@@ -56,7 +55,7 @@ trait Combinations {
 abstract class Expression(
     associatedTree: Tree, associatedNode: InSynth.Node
 )
-extends Combinations with Ordered[Expression] {
+extends Combinations with Ordered[Expression] with HasLogger {
   // comparison of expression is done by their weights
   def compare(that:Expression) = {
     val thatVal = that.getTraversalWeight
@@ -70,7 +69,7 @@ extends Combinations with Ordered[Expression] {
   def getAssociatedNode = associatedNode
   
   // reconstruct the output tree node
-  def toTreeNode:Node
+  def toTreeNode: Node
   
   // traversal weight returns the weight of associated tree
   override def getTraversalWeight = {
@@ -90,18 +89,15 @@ extends Combinations with Ordered[Expression] {
  * it can have multiple alternatives to synthesize 
  */
 class Tree(parent: Composite, val tpe: Type, var decls: Set[Expression] = Set())
-extends Combinations
+extends Combinations with HasLogger
 {
   // minimal weight of synthesized expression (used for pruning expressions with
   // larger weight)
-  var minWeight = Double.MaxValue
+  var minWeight = Float.MaxValue
   
   // add declaration to this tree (when it is explored)
   def addDeclaration(dec: Expression) {
-    // logging
-    if (Config.isLogging && isPruned) {
-      Config.logStructures.warning("Adding declaration " + dec + " to pruned tree " + this)
-    }
+    warning("Adding declaration " + dec + " to pruned tree " + this)
     decls += dec
   }
   
@@ -111,18 +107,16 @@ extends Combinations
     
   // this method is called when some associated expression is explored
   def childDone(decl: Expression):Unit = {
-    if (Config.isLogging) {
-	  Config.logStructures.entering(this.getClass.getName, "childDone")
-	  Config.logStructures.info("Tree(" + this + ") received decl with weight " +
-        decl.getMinComputedWeight + "and has minWeight " + minWeight)
-    }
+	entering(this.getClass.getName, "childDone")
+	info("Tree(" + this + ") received decl with weight " +
+      decl.getMinComputedWeight + "and has minWeight " + minWeight)
     minWeight = min(getTraversalWeight + decl.getMinComputedWeight, minWeight)
     parent.childDone(this)
   }
   
   override def isDone =
     // just check if minimal weight has changed (is lower than the max double value)
-    minWeight != Double.MaxValue// && !isPruned
+    minWeight != Float.MaxValue// && !isPruned
   
   override def getNumberOfCombinations =
     (0 /: decls ) { (comb, decl) => comb + decl.getNumberOfCombinations }
@@ -133,30 +127,23 @@ extends Combinations
     for (dec <- decls; if !dec.isPruned) {
       dec.setPruned(valPruned)
     }
-    // logging
-    if (Config.isLogging && !isDone && parent.isDone) {
-      Config.logStructures.warning("Pruning (" + FormatType(tpe) + ") but its parent is done.")
-    }
+
+    if (!isDone && parent.isDone)
+      warning("Pruning (" + tpe.toString + ") but its parent is done.")
+    
   }
   	
   def toTreeNode = {
-    // logging
-    if (Config.isLogging) {
-	    Config.logStructures.entering(getClass.getName, "toTreeNode")
-	    Config.logStructures.fine("toTreeNode started on Tree: " + FormatType(tpe) )
-    }
+	entering(getClass.getName, "toTreeNode")
+	fine("toTreeNode started on Tree: " + tpe.toString )
     
     // transform only those expressions that are done
     val declsToTransform = decls filter { _.isDone }
     
-    // logging
-    if (Config.isLogging) {
-      Config.logStructures.info("has doneDeclarations " + declsToTransform.size)
-    }
-    if (Config.isLogging && declsToTransform.isEmpty) {
-      Config.logStructures.warning("Tree (" + FormatType(tpe) + "): toTree has none done expressions "
+    info("has doneDeclarations " + declsToTransform.size)
+    if (declsToTransform.isEmpty)
+      warning("Tree (" + tpe.toString + "): toTree has none done expressions "
 	    + "(declsToTransform: " + ("" /: declsToTransform){ (s, t) => s + ", "  + FormatNode(t.getAssociatedNode) } + ")")
-    }
     
     // transform declarations associated with this node
     val nodeSet = (Set[Node]() /: declsToTransform) {
@@ -168,10 +155,8 @@ extends Combinations
       }
     }
     
-    // logging
-    if (Config.isLogging && nodeSet.isEmpty) {
-      Config.logStructures.warning("Tree (" + FormatType(tpe) + "): toTree transformed nodes set empty")
-    }
+    if (nodeSet.isEmpty)
+      warning("Tree (" + tpe.toString + "): toTree transformed nodes set empty")
     
     // set of transformed nodes should not be empty
     assert(!nodeSet.isEmpty)
@@ -194,10 +179,10 @@ extends Combinations
   // check if the weight is pruned at this tree
   // a method that can speed up pruning (if weight at the start is greater than minWeight
   // of some parent tree up the hierarchy)
-  def checkIfPruned(weight: Double): Boolean = {
-  	if (Config.isLogging && weight > minWeight) {
-  	  Config.logStructures.info("At node(" + this + ") checkIfPruned succeded (" + weight + ">" + minWeight + ")")
-  	}  	
+  def checkIfPruned(weight: Float): Boolean = {
+  	if (weight > minWeight)
+  	  info("At node(" + this + ") checkIfPruned succeded (" + weight + ">" + minWeight + ")")
+
     if (weight > minWeight) true
   	else parent.associatedTree.checkIfPruned(weight)
   }
@@ -211,18 +196,16 @@ class TopTree(neededCombinations: Int)
 extends Tree(null, BottomType)
 {    
   override def childDone(decl: Expression):Unit = {
-    if (Config.isLogging)
-    	Config.logStructures.info("Child done at top tree called.")
+    info("Child done at top tree called.")
     if (neededCombinations <= getNumberOfCombinations) {
-      if (Config.isLogging)
-      	Config.logStructures.info("Yes we found enough combinations(" + getNumberOfCombinations + ", will start pruning.")
+      info("Yes we found enough combinations(" + getNumberOfCombinations + ", will start pruning.")
       	
       Rules.doPruning = true
       //Rules.logger.info("Tree looks like: " + FormatCombinations(this))
     }
   }
   
-  override def checkIfPruned(weight: Double): Boolean = {
+  override def checkIfPruned(weight: Float): Boolean = {
 		false
   }
   
@@ -240,15 +223,14 @@ extends Expression(associatedTree, associatedNode) {
   var doneChildren: Set[Tree] = Set()
   
   def addChild(decl: Tree) = {
-    if (Config.isLogging)
-    Config.logStructures.fine("Added child " + decl + " to composite " + origDecl.getSimpleName)
+    fine("Added child " + decl + " to composite " + origDecl.getSimpleName)
     
     children += decl 
   }
   
   def childDone(decl: Tree):Unit = {
     for (child <- doneChildren)
-      assert(child.getMinComputedWeight < Double.MaxValue)
+      assert(child.getMinComputedWeight < Float.MaxValue)
     
     doneChildren += decl
     // if my weight is larger or equal then prune my sub-tree
@@ -256,8 +238,7 @@ extends Expression(associatedTree, associatedNode) {
     // NOTE we can get a call to childDone again but minWeight will be the same as
     // previously set getWeight (we need >)
     if (Rules.doPruning && associatedTree.getTraversalWeight + getMinComputedWeight > associatedTree.minWeight && !isPruned) {
-      if (Config.isLogging)	
-    	Config.logStructures.info("Pruning Composite (" + FormatNode(associatedNode, 0) + ")")
+      info("Pruning Composite (" + FormatNode(associatedNode, 0) + ")")
     	
       // mark the node as pruned
 	  setPruned(true)
@@ -281,10 +262,9 @@ extends Expression(associatedTree, associatedNode) {
     else (1 /: children) { (comb, decl) => comb * decl.getNumberOfCombinations }
     
   override def setPruned(valPruned: Boolean):Unit = {
-    // logging
-    if (Config.isLogging && associatedTree.minWeight >= getTraversalWeight && !associatedTree.isPruned) {
-      Config.logStructures.warning("Pruning (" + FormatNode(associatedNode, 0) + ") but it has the min weight at associated tree.")
-    }
+    if (associatedTree.minWeight >= getTraversalWeight && !associatedTree.isPruned)
+      warning("Pruning (" + FormatNode(associatedNode, 0) + ") but it has the min weight at associated tree.")
+
     super.setPruned(valPruned)
     for (tree <- children; if !tree.isPruned) {
       tree.setPruned(valPruned)
@@ -292,17 +272,15 @@ extends Expression(associatedTree, associatedNode) {
   }
   
   override def toTreeNode = {
-    // logging
-    if (Config.isLogging) {
-		Config.logStructures.entering(getClass.getName, "toTreeNode")
-		Config.logStructures.fine("toTreeNode started on Composite: " + origDecl.getSimpleName)
-		if (!(children &~ doneChildren).isEmpty) {
-		  Config.logStructures.warning("Composite " + origDecl.getSimpleName + " toTree has not all children done "
-		    + "(children: " + ("" /: children){ (s, t) => s + ", "  + FormatType(t.tpe) } 
-		  	+ ", doneChildren: " + ("" /: doneChildren){ (s, t) => s + ", "  + FormatType(t.tpe) } + ")")
-		  Config.logStructures.warning("The toTreeNode failed composite has " + getNumberOfCombinations + " combinations.")
-		}
-    }
+	entering(getClass.getName, "toTreeNode")
+	fine("toTreeNode started on Composite: " + origDecl.getSimpleName)
+	if (!(children &~ doneChildren).isEmpty) {
+	  warning("Composite " + origDecl.getSimpleName + " toTree has not all children done "
+	    + "(children: " + ("" /: children){ (s, t) => s + ", "  + t.tpe.toString } 
+	  	+ ", doneChildren: " + ("" /: doneChildren){ (s, t) => s + ", "  + t.tpe.toString } + ")")
+	  warning("The toTreeNode failed composite has " + getNumberOfCombinations + " combinations.")
+	}
+    
     // this assert is needed since transform should not be called if node is not done
     assert((children &~ doneChildren).isEmpty)
     // return simple node
@@ -341,11 +319,9 @@ extends Expression(associatedTree, associatedNode) {
   def getNumberOfCombinations: Int = 1
   
   override def toTreeNode = {
-    // logging
-    if (Config.isLogging) {
-	    Config.logStructures.entering(getClass.getName, "toTreeNode")
-	    Config.logStructures.fine("toTreeNode started on: " + origDecl.getSimpleName)
-    }
+    entering(getClass.getName, "toTreeNode")
+    fine("toTreeNode started on: " + origDecl.getSimpleName)
+    
     SimpleNode(
       List(origDecl), associatedTree.tpe, Map[Type, ContainerNode]()
     )
@@ -366,17 +342,15 @@ extends Expression(associatedTree, associatedNode) {
 /**
  * corresponds to a leaf node which is an expression from context
  */
-case class LeafExpression(associatedTree: Tree, weight: Double, associatedNode: InSynth.SimpleNode)
+case class LeafExpression(associatedTree: Tree, weight: Float, associatedNode: InSynth.SimpleNode)
 extends Expression(associatedTree, associatedNode) {
   def getNumberOfCombinations: Int = 1
   
   override def toTreeNode = {
-    // logging
-    if (Config.isLogging) {
-	    Config.logStructures.entering(getClass.getName, "toTreeNode")    
-	    Config.logStructures.fine("toTreeNode started on: " + FormatNode(associatedNode, 0))
-    }
-    AbsNode(associatedTree.tpe)
+    entering(getClass.getName, "toTreeNode")    
+    fine("toTreeNode started on: " + FormatNode(associatedNode, 0))
+    
+    AbsNode(associatedNode.getDecls)
   }
   
   override def isDone = true//!isPruned
@@ -389,34 +363,4 @@ extends Expression(associatedTree, associatedNode) {
   }
   
   override def getMinComputedWeight = weight
-}
-
-case class FormatCombinations(comb: Combinations) extends ch.epfl.insynth.print.Formatable {
-  override def toDocument = toDocument(comb)
-  
-  def toDocument(comb: Combinations): scala.text.Document = {
-    import ch.epfl.insynth.print.FormatHelpers._
-    import scala.text.Document._
-
-    comb match {
-      case tree:Tree =>
-        "Tree" :: paren(FormatType(tree.tpe).toDocument) ::
-        brackets( tree.getTraversalWeight.toString ) :/: 
-        "[Done?" :: tree.isDone.toString :: "]" :: 
-        nestedBrackets(
-          seqToDoc(tree.decls.toList, ", ", { e:Expression => toDocument(e) })
-        )
-        //associatedTree: Tree, origDecl: Declaration, associatedNode: InSynth.SimpleNode
-      case composite:Composite =>
-        "Composite" :: paren(composite.origDecl.getSimpleName) ::
-        brackets( composite.getTraversalWeight.toString ) :/:
-        "[Done?" :: composite.isDone.toString :: "]" ::
-        nestedBrackets(seqToDoc(composite.children.toList, ", ", { e:Tree => toDocument(e) }))
-      case simple:Simple =>
-        "Simple"  ::
-        brackets( comb.getTraversalWeight.toString ) :: paren(simple.origDecl.getSimpleName)
-      case leaf:LeafExpression =>
-        "Leaf" :: brackets( comb.getTraversalWeight.toString )
-    }
-  }
 }
