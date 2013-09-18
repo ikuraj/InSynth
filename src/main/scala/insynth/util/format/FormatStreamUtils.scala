@@ -36,7 +36,7 @@ class FormatStreamUtils[_](node: Streamable[_], _level: Int) extends Formatable 
   def trans(node: Streamable[_], level: Int, visited: Set[Streamable[_]]): Document = {
     
     def header(node: Streamable[_]) = {
-      sqBrackets(node.toString + "[Inf?" + node.isInfinite + "]")
+      sqBrackets(node.toString /* + "[Inf?" + node.isInfinite + "]" */)
     }
     
     if (level == 0)
