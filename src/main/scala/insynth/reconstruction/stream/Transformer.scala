@@ -236,7 +236,7 @@ class Transformer(streamBuilder: StreamFactory[Node])
                       case nprime: SimpleNode /*if nprime.getType == parameterTypeInSynth*/ =>
                         for (decl <- nprime.getDecls)
                           assert(declarationHasAppropriateType(decl, parameterType),
-                            "IntermediateTransformer:211, declaration should have appropriate type")
+                            "declaration " + decl + " should have appropriate type " + parameterType)
                         // add recursively transformed node to set
                         transform(nprime, context, parameterType, 
                             visited + nodeToCheck) :: list
@@ -347,16 +347,13 @@ class Transformer(streamBuilder: StreamFactory[Node])
      */
     def getMatchingTypeFromDeclaration: List[Streamable[Node]] = {
       // check each declaration
-      (List[Streamable[Node]]() /: node.getDecls
-//          .filter(
-//            decl => ! (decl.getSimpleName contains "addToPers") && ! (decl.getSimpleName == "AddressBook")
-//          )
-          ) {
+      (List[Streamable[Node]]() /: node.getDecls) {
         (list, declaration) =>
           {
+            fine("getMatchingTypeFromDeclaration: checking decl: " + declaration)
             declaration match {
               // the declaration should have the needed type
-              case nd: Declaration if declarationHasAppropriateType(nd, goalType) => {
+              case nd: Declaration if declarationHasAppropriateType(nd, goalType) => {                
                 // check the declaration scala type
                 val generatedApplication = nd.getDomainType match {
 
@@ -388,7 +385,6 @@ class Transformer(streamBuilder: StreamFactory[Node])
 
       // goal type is function type, we need to add new abstraction
       case fun @ FunctionType(params, retType) => {
-        throw new UnsupportedOperationException("Function as arguments currently not supported")
         // compute an appropriate abstraction so that the body can be plugged in
         val (abstractionTermFun, contextDelta) = computeAbstraction(emptyContext, goalType)
 
@@ -408,10 +404,8 @@ class Transformer(streamBuilder: StreamFactory[Node])
       case _ =>
         // return only the set of terms matching given declarations
         // NOTE no need to scan context here because it is done when parameter search encounters a leaf node        
-//        assert(getMatchingTypeFromDeclaration.size == node.getDecls.size, " + getMatchingTypeFromDeclaration.size + "==" + node.getDecls.size)
-// DEBUG
         if (getMatchingTypeFromDeclaration.size > 0)
-        streamBuilder.makeRoundRobbin(getMatchingTypeFromDeclaration/*, "all decls for goal type" + goalType + " " + variableGenerator.getFreshVariableName*/)
+        	streamBuilder.makeRoundRobbin(getMatchingTypeFromDeclaration/*, "all decls for goal type" + goalType + " " + variableGenerator.getFreshVariableName*/)
         else
           streamBuilder.makeEmptyStreamable
     }
@@ -420,11 +414,10 @@ class Transformer(streamBuilder: StreamFactory[Node])
     assert(!nodeMap.contains(node), "nodeMap should not contain: " + node)
     nodeMap += (node -> result)
 
+    exiting("transform", FormatStreamUtils(result).toString)
     // set of intermediate nodes is stored in result
     result
   }
-
-  // XXX possible grouping of declarations with the same scala type!
 
   /**
    * computes the corresponding abstraction element for the given goal type
@@ -433,9 +426,7 @@ class Transformer(streamBuilder: StreamFactory[Node])
    * 	context
    */
   def computeAbstraction(outerContext: Context, goalType: DomainType): (Node => Abstraction, Context) = {
-    // log
-    entering(this.getClass().getName(), "computeAbstraction")
-    fine("computing abstraction")
+    entering("computeAbstraction", outerContext, goalType)
 
     // "last return type" of the goal type
     val neededReturnType = getReturnType(goalType)
@@ -444,22 +435,25 @@ class Transformer(streamBuilder: StreamFactory[Node])
     // term together with new context since the goal type is a function
     goalType match {
       case sf @ FunctionType(params, f: FunctionType) => {
-        // create an addition to the current context by inspecting all parameters
-        // of the function
+        // create an addition to the current context by inspecting all parameters of the function
         val contextDelta: Context = params map { (variableGenerator getFreshVariableName, _) }
         // recursively compute the inner abstraction and the full context
         val innerAbstractionPair = computeAbstraction(contextDelta ++ outerContext, f)
+
         // return tuple (function, full context)
         (
           { node: Node =>
-            Abstraction(
-              sf, (params zip contextDelta) map { pair => Variable(pair._1, pair._2._1) },
-              innerAbstractionPair._1(node))
-          }, innerAbstractionPair._2)
+            	Abstraction(
+          			sf, (params zip contextDelta) map { pair => Variable(pair._1, pair._2._1) },
+          			innerAbstractionPair._1(node)
+        			)
+          }, innerAbstractionPair._2
+        )
       }
       case sf @ FunctionType(params, `neededReturnType`) => {
         // create an addition to the current context
         val contextDelta: Context = params map { (variableGenerator getFreshVariableName, _) }
+
         // the recursion ends in this case
         (
           { 
