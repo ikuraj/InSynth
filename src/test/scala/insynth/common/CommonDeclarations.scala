@@ -32,4 +32,17 @@ object CommonDeclarations {
     functionFunsToFunType
   )
 
+  object BuildLighterComplexTree {
+    import CommonDomainTypes.BuildLighterComplexTree._
+    
+    val intLeafDeclaration = new TestDeclaration(typeInt)
+    
+	  val m1Declaration	= TestDeclaration(
+	      m1, "m1"
+	  )
+	  val m2Declaration = TestDeclaration(
+	      m2, "m2"
+	  )
+  }
+
 }

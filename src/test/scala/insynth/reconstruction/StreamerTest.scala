@@ -16,6 +16,7 @@ class StreamerTest extends JUnitSuite {
   import CommonUtils._
   import CommonLambda._
   
+  @Ignore
   @Test
   def treeBoolToInt {
     val (queryNode, query) = exampleBoolToInt
@@ -30,6 +31,7 @@ class StreamerTest extends JUnitSuite {
     assertEquals(0f, result._2, 0f)    
   }
   
+  @Ignore
   @Test
   def treeIntToIntBoth {
     val queryNode = exampleIntToIntBoth
@@ -53,6 +55,7 @@ class StreamerTest extends JUnitSuite {
     assertTrue(message, expressions contains inv3WithBoolInv)      
   }
   
+  @Ignore
   @Test
   def treeIntToIntBothOrdered {
     val queryNode = exampleIntToIntBoth
@@ -91,6 +94,55 @@ class StreamerTest extends JUnitSuite {
 	        ") should occur before expression " + listOfExpressionsOrder(ind+1) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind + 1)) + ")",
 	        expressions.indexOf(listOfExpressionsOrder(ind)) < expressions.indexOf(listOfExpressionsOrder(ind+1)))
   	}
+  }
+
+  @Ignore
+  @Test
+  def testComplexTree = {
+    val queryNode = buildComplexTree
+    
+    val expStream = Streamer(queryNode, true)
+    
+    val expressions = assertTake(expStream, 20).map(
+      _._1 match {
+        case Application(_, funId :: onlyArg :: Nil) => onlyArg
+        case other => other
+      }
+    )
+    
+    val listOfExpressions = List(boolInv, inv1WithInt, inv1WithBoolInv, inv2WithInt,
+      inv3WithInt, inv2WithBoolInv, inv3WithBoolInv)
+    
+    for (exp <- listOfExpressions)
+    	assertTrue(expressions.toSet contains exp)
+    	
+  	{
+	    val listOfExpressionsOrder = List(boolInv, inv2WithInt,
+	      inv2WithBoolInv, inv3WithBoolInv)
+	    
+	    for (ind <- 0 until listOfExpressionsOrder.size - 1)
+	      assertTrue("Expression " + listOfExpressionsOrder(ind) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind)) +
+	        ") should occur before expression " + listOfExpressionsOrder(ind+1) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind + 1)) + ")",
+	        expressions.indexOf(listOfExpressionsOrder(ind)) < expressions.indexOf(listOfExpressionsOrder(ind+1)))
+  	}
+  }
+
+  @Test
+  def testLigtherComplexTree = {    
+    import CommonLambda.BuildLighterComplexTree._
+    
+    val queryNode = buildLighterComplexTree
+    val expStream = Streamer(queryNode, true)
+    
+    val expressions = assertTake(expStream, 20).map(
+      _._1 match {
+        case Application(_, funId :: onlyArg :: Nil) => onlyArg
+        case other => other
+      }
+    )
+    
+    for (exp <- lambdaNodes)
+    	assertTrue(expressions.toSet.mkString(", ") + " do not contain " + exp, expressions.toSet contains exp)
   }
 
 }

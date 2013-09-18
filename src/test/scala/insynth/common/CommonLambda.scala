@@ -5,6 +5,8 @@ import insynth.reconstruction.stream._
 import insynth.testdomain.{ TestQueryBuilder => QueryBuilder }
 
 object CommonLambda {
+  implicit def nodeToListNode(node: Node) = List(node) 
+  implicit def varToListVar(va: Variable) = List(va) 
 
   import CommonDeclarations._
   import CommonProofTrees._
@@ -161,6 +163,19 @@ object CommonLambda {
     Identifier(functionIntToIntType, functionIntToIntDeclaration), inv1WithBoolInv))
   val inv3WithBoolInv = Application(functionIntToIntType, List(
     Identifier(functionIntToIntType, functionIntToIntDeclaration), inv2WithBoolInv))
+
+  object BuildLighterComplexTree {
+    import CommonDomainTypes.BuildLighterComplexTree._
+    import CommonDeclarations.BuildLighterComplexTree._
+    
+	  val lambdaNodes = Application(m1, List(
+      Identifier(m1, m1Declaration),
+      Abstraction(m2, Variable(m2.args.head, "var_1"), Application(m2, List(
+        Identifier(m2, m2Declaration),
+        Identifier(typeInt, intLeafDeclaration)))
+      ) 
+    ))
+	}
   
   // TODO do if we need abstraction (high-order functions)
 //  def constructFunctionIntToIntIntermediateLambda = {

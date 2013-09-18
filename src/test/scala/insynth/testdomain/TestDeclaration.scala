@@ -7,9 +7,9 @@ import insynth.structures.Weight._
 // need name to differentiate declarations if needed
 case class TestDeclaration(
   domainType: DomainType, override val inSynthType: SuccinctType,
-  name: String = "testDeclaration", override val weight: Weight = 1.0f
+  name: String = "testDeclaration", val weight: Weight = 1.0f
 )
-extends insynth.load.Declaration(inSynthType, weight) {
+extends insynth.load.Declaration(inSynthType) {
   
   def this(domainType: DomainType, name: String = "testDeclaration", weight: Weight = 1.0f) =
     this(domainType, domainType.toSuccinctType, name, weight) 
@@ -18,6 +18,8 @@ extends insynth.load.Declaration(inSynthType, weight) {
   	//"(" + inSynthType.toString + ")" + weight
   
   override def getDomainType = domainType
+  
+  override def getWeight = weight
   
 }
 

@@ -11,9 +11,11 @@ import insynth.structures._
 import insynth.testdomain.{ TestQueryBuilder => QueryBuilder, _ }
 
 object CommonProofTrees {
+  implicit def declToList(dec: TestDeclaration) = List(dec)
+  implicit val transform = DomainType.toSuccinctType _
 
   import CommonDeclarations._
-  import CommonSuccinctTypes._
+  import CommonDomainTypes._
 
   val intNode =
     new SimpleNode(
@@ -171,47 +173,273 @@ object CommonProofTrees {
     queryNode
   }
   
-  // TODO do if we need abstraction (high-order functions)
-//  def exampleFunctionIntToInt = {
-//    val queryBuilder = new QueryBuilder(FunctionType(List(typeInt), typeInt))
-//
-//    val query = queryBuilder.getQuery
-//
-//    val queryDeclaration = query.getDeclaration
-//                    
-//    val getBooleanNode =
-//      new SimpleNode(
-//        List(booleanDeclaration),
-//        MutableMap.empty)
-//
-//    val getIntNodeFromBoolean =
-//      new SimpleNode(
-//        List(functionBoolToIntDeclaration),
-//        MutableMap( // for each parameter type - how can we resolve it
-//          Const("Boolean") ->
-//            new ContainerNode(
-//              MutableSet(getBooleanNode))))
-//
-//    val getIntNodeFromIntToInt =
-//      new SimpleNode(
-//        List(functionIntToIntDeclaration),
-//        MutableMap())
-//
-//    getIntNodeFromIntToInt.getParams +=
-//      (
-//        Const("Int") ->
-//        new ContainerNode(
-//          MutableSet(getIntNodeFromBoolean, getIntNodeFromIntToInt)))
-//
-//    val queryNode =
-//      new SimpleNode(
-//        List(queryDeclaration),
-//        MutableMap( // for each parameter type - how can we resolve it
-//          Const("Int") ->
-//            new ContainerNode(
-//              MutableSet(getIntNodeFromBoolean, getIntNodeFromIntToInt))))
-//
-//    queryNode
-//  }
+  def exampleFunctionIntToInt = {
+    import CommonDomainTypes._
+    implicit val transform = DomainType.toSuccinctType _
+
+    val queryBuilder = new QueryBuilder(Function(List(typeInt), typeInt))
+
+    val query = queryBuilder.getQuery
+
+    val queryDeclaration = query.getDeclaration
+                    
+    val getBooleanNode =
+      new SimpleNode(
+        List(booleanDeclaration),
+        MutableMap.empty)
+
+    val getIntNodeFromBoolean =
+      new SimpleNode(
+        List(functionBoolToIntDeclaration),
+        MutableMap( // for each parameter type - how can we resolve it
+          Const("Boolean") ->
+            new ContainerNode(
+              MutableSet(getBooleanNode))))
+
+    val getIntNodeFromIntToInt =
+      new SimpleNode(
+        List(functionIntToIntDeclaration),
+        MutableMap())
+
+    getIntNodeFromIntToInt.getParams +=
+      (
+        Const("Int") ->
+        new ContainerNode(
+          MutableSet(getIntNodeFromBoolean, getIntNodeFromIntToInt)))
+
+    val queryNode =
+      new SimpleNode(
+        List(queryDeclaration),
+        MutableMap( // for each parameter type - how can we resolve it
+          Const("Int") ->
+            new ContainerNode(
+              MutableSet(getIntNodeFromBoolean, getIntNodeFromIntToInt))))
+
+    queryNode
+  }
+
+  // InSynth example trees
+  
+	//***************************************************
+	// Goals
+	//	find expression of type: Boolean
+	//	expression: query(m1(this, m2(this), m4(this)))
+	//	code:
+	// 	class A {
+	//  	def m1(f: Int=>String, c:Char): Boolean
+	//  	def m2(a: Int): String
+	//  	def m3(a: Long): String
+	//  	def m4(): Char
+	//  	def m5(a: Int): Long
+	//  	def m6(): String
+	//  	def test() {
+	//    		val b:Bool = ?synthesize?
+	//  	}
+	//	}
+	//***************************************************
+  def buildComplexTree = {
+    import CommonDomainTypes._
+
+    implicit def typeToList(typ: DomainType) = List(typ)
+    implicit def declToList(dec: TestDeclaration) = List(dec)
+    implicit val transform = DomainType.toSuccinctType _
+
+	  val objectA = typeObjectA
+	  // def m1(f: Int=>String, c:Char): Boolean
+	  val m1 = Function(
+	      List ( objectA, Function(typeInt, typeString), typeChar ), // parameters
+	      typeBoolean // return type
+		)	
+	  // def m2(a: Int): String 
+	  val m2 = Function(List(objectA, typeInt), typeString)
+	  // def m3(a:Long): String
+	  val m3 = Function(List(objectA, typeLong), typeString)
+	  // def m4(): Char
+	  val m4 = Function(List(objectA), typeChar)
+	  // def m5(a: Int): Long
+	  val m5 = Function(List(objectA, typeInt), typeLong)
+	  // def m6(): String
+	  val m6 = Function(List(objectA), typeString)
+	  // query: typeBoolean → ⊥
+	  val queryType = Function(typeBoolean, typeBottom)
+	  
+	  // NOTE InSynth query type: Arrow(TSet(List(Const(String))),Const($Bottom_Type_Just_For_Resolution$))
+	  
+	  val fullNameClassA = "fullNameClassA"
+	  val objectADeclaration = TestDeclaration(
+	      objectA, // scala type
+	      fullNameClassA // full name
+	  )
+	  
+	  val m1Declaration	= TestDeclaration(
+	      m1,
+	      fullNameClassA + ".m1"
+	  )
+	  val m2Declaration = TestDeclaration(
+	      m2, // inSynth type (implicit conversion)
+	      fullNameClassA + ".m2" // full name
+	  )
+	  val m3Declaration = TestDeclaration(
+	      m3,
+	      fullNameClassA + ".m3" // full name
+      )
+	  val m4Declaration = TestDeclaration(
+	      m4,
+	      fullNameClassA + ".m4" // full name
+      )
+	  val m5Declaration = TestDeclaration(
+	      m5,
+	      fullNameClassA + ".m5" // full name
+      )
+	  val m6Declaration = TestDeclaration(
+	      m6,
+	      fullNameClassA + ".m6" // full name
+      )		
+	  
+	  // special query declaration
+	  val queryDeclaration = TestDeclaration(
+	      queryType, 
+	      "special.name.for.query"
+	    )	  
+	  
+	  //************************************
+	  // InSynth proof trees
+	  //************************************
+	  
+	  // XXX found out that there is a non-needed redundancy, new ContainerNode type
+	  // is actually not needed?
+	  
+	  // goal:ClassA object, type:ClassA
+	  // expression: this	  
+	  val thisNode = new SimpleNode(
+	      objectADeclaration, MutableMap()
+      )
+	    
+	  // goal:Char, type:Unit→Char
+	  // expression: m4(this)	  
+	  val m4Node = new SimpleNode(
+	      m4Declaration,
+	      MutableMap(
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode))
+          )
+      )
+      
+      // goal:(Int→String), type:(Int→String)
+	  // expression: m2(this)
+	  val m2Node = new SimpleNode(
+	      m2Declaration,
+	      MutableMap(
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode)),
+	          transform(typeInt) ->
+	          	new ContainerNode(MutableSet(new SimpleNode(
+	          	    { 
+	          	      val dec = new TestDeclaration(typeInt); dec	          	    	
+	          	    }, MutableMap.empty
+          	    )))
+          )
+      )      
+      
+      // goal:String, type:(A→String)
+	  // expression: m6(this)
+	  val m6Node = new SimpleNode(
+	      m6Declaration,
+	      MutableMap(
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode))
+          )
+      )
+            
+      // goal: Long, type:(Int→Long)
+	  // expression: m5(this, _)
+	  val m5Node = new SimpleNode(
+	      m5Declaration,
+	      MutableMap(
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode)),
+	          transform(typeInt) -> new ContainerNode( 
+	          	MutableSet( new SimpleNode(
+	          	    { 
+	          	      val dec = new TestDeclaration(typeInt); dec	          	    	
+	          	    }, MutableMap.empty
+          	    ) )
+	          )
+          )
+      )
+      
+      // goal:(Int→String), type:(Long→String)
+	  // expression: Int => m3(this, m5(this, _))
+	  val composeNode = new SimpleNode(
+	      m3Declaration,
+	      MutableMap(
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode)),
+	          transform(typeLong) -> new ContainerNode(MutableSet(m5Node))
+          )
+      )
+	    
+	  // goal:Boolean, type:List((Int→String),Char)→Boolean
+	  // expression: m1(this, 
+      //				m2(this) |  m3(this) ∘ m5(this) | Int→m6(this), 
+	  //				m4(this))	  
+	  val m1Node = new SimpleNode(
+	      m1Declaration,
+	      MutableMap(
+	          transform(typeChar) -> new ContainerNode(MutableSet(m4Node)),
+	          transform(Function(typeInt, typeString)) ->
+	          	new ContainerNode( 
+	          	    MutableSet(composeNode, m2Node, m6Node)
+          	    ),
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode))
+          )
+      )
+	  
+      // goal:⊥, type:Boolean→⊥	    
+      // expression: query(		m1(this,
+	  //			m2(this) |  m3(this) ∘ m5(this) | Int→m6(this), 
+	  //			m4(this)	)):⊥
+	  val queryNode = 
+	    new SimpleNode(
+	  	  queryDeclaration,
+	  	  MutableMap( // for each parameter type - how can we resolve it
+	  	      transform(typeBoolean) ->
+	  	      new ContainerNode(
+	  	          MutableSet(m1Node)
+	            )
+	        ) 
+	    )
+	    
+	  queryNode
+  }
+  
+  def buildLighterComplexTree = {
+    import CommonDomainTypes.BuildLighterComplexTree._
+    import CommonDeclarations.BuildLighterComplexTree._
+	  
+    val queryBuilder = new QueryBuilder(typeBoolean)
+    val queryDeclaration = queryBuilder.getQuery.getDeclaration
+
+	  val intLeafNode = new SimpleNode(intLeafDeclaration, MutableMap.empty)
+    val m2Node = new SimpleNode(m2Declaration, MutableMap(
+      transform(typeInt) -> new ContainerNode(MutableSet(intLeafNode))
+    ))
+
+	  val m1Node = new SimpleNode(
+	      m1Declaration,
+	      MutableMap(
+	          transform(Function(typeInt, typeString)) ->
+	          	new ContainerNode(MutableSet(m2Node))
+          )
+      )
+	  
+	  val queryNode = 
+	    new SimpleNode(
+	  	  queryDeclaration,
+	  	  MutableMap( // for each parameter type - how can we resolve it
+	  	      transform(typeBoolean) ->
+	  	      new ContainerNode(
+	  	          MutableSet(m1Node)
+	            )
+	        ) 
+	    )
+	    
+	  queryNode
+  }
 
 }
