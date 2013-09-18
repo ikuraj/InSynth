@@ -3,11 +3,11 @@ package insynth.load
 import insynth.structures.{ SuccinctType => Type, _ }
 import insynth.structures.Weight._
 
-abstract class Declaration(val inSynthType: Type, val weight: Weight) {        
+abstract class Declaration(val inSynthType: Type) {        
 	
   private var query = false
   
-  def getWeight = weight  
+  def getWeight: Weight
   //def setWeight(weight:Weight) { this.weight = weight }
   
   def isQuery = query
