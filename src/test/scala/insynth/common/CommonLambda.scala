@@ -4,6 +4,8 @@ import insynth.reconstruction.stream._
 
 import insynth.testdomain.{ TestQueryBuilder => QueryBuilder }
 
+import scala.language.implicitConversions
+
 object CommonLambda {
   implicit def nodeToListNode(node: Node) = List(node) 
   implicit def varToListVar(va: Variable) = List(va) 
@@ -163,7 +165,9 @@ object CommonLambda {
     Identifier(functionIntToIntType, functionIntToIntDeclaration), inv1WithBoolInv))
   val inv3WithBoolInv = Application(functionIntToIntType, List(
     Identifier(functionIntToIntType, functionIntToIntDeclaration), inv2WithBoolInv))
-
+  
+  val intLeafNode = Identifier(typeInt, intLeafDeclaration)
+    
   object BuildLighterComplexTree {
     import CommonDomainTypes.BuildLighterComplexTree._
     import CommonDeclarations.BuildLighterComplexTree._
@@ -172,9 +176,55 @@ object CommonLambda {
       Identifier(m1, m1Declaration),
       Abstraction(m2, Variable(m2.args.head, "var_1"), Application(m2, List(
         Identifier(m2, m2Declaration),
-        Identifier(typeInt, intLeafDeclaration)))
+        intLeafNode))
       ) 
     ))
+	}
+
+  object BuildComplexTree {
+    import CommonDomainTypes.BuildComplexTree._
+    import CommonDeclarations.BuildComplexTree._
+    
+    val thisIdent = Identifier(objectA, objectADeclaration)
+    
+	  val lambdaNodes = Iterable(
+//	      Application(m1, List(
+//		      Identifier(m1, m1Declaration), 
+//		      thisIdent,
+//		      Abstraction(intToString, List(Variable(m2.args(1), "var_1")),
+//	          Application(m2, List(
+//			        Identifier(m2, m2Declaration),        
+//			        thisIdent,
+//			        Identifier(typeInt, intLeafDeclaration))
+//			      )),
+//		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
+//		    )),
+//	      Application(m1, List(
+//		      Identifier(m1, m1Declaration), 
+//		      thisIdent,
+//		      Abstraction(intToString, List(Variable(typeInt, "var_1")),
+//	          Application(m6, List(
+//			        Identifier(m6, m6Declaration),        
+//			        thisIdent)
+//			      )),
+//		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
+//		    )),
+	      Application(m1, List(
+		      Identifier(m1, m1Declaration), 
+		      thisIdent,
+		      Abstraction(intToString, List(Variable(typeInt, "var_1")),
+	          Application(m3, List(
+			        Identifier(m3, m3Declaration),        
+			        thisIdent,
+			        Application(m5, List(
+				        Identifier(m5, m5Declaration),        
+				        thisIdent,
+				        intLeafNode
+		        		))
+			      ))),
+		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
+		    ))
+	    )
 	}
   
   // TODO do if we need abstraction (high-order functions)

@@ -1,16 +1,16 @@
 package insynth.common
 
 import scala.collection.mutable.{ Map => MutableMap, Set => MutableSet }
-
 import org.junit.Assert._
-import org.junit.Test
-import org.junit.Ignore
+import org.junit._
 
 import insynth.structures._
-
 import insynth.testdomain.{ TestQueryBuilder => QueryBuilder, _ }
 
+import scala.language.implicitConversions
+
 object CommonProofTrees {
+  implicit def typeToList(typ: DomainType) = List(typ)
   implicit def declToList(dec: TestDeclaration) = List(dec)
   implicit val transform = DomainType.toSuccinctType _
 
@@ -238,77 +238,13 @@ object CommonProofTrees {
 	//	}
 	//***************************************************
   def buildComplexTree = {
-    import CommonDomainTypes._
-
+    import CommonDomainTypes.BuildComplexTree._
+    import CommonDeclarations.BuildComplexTree._
     implicit def typeToList(typ: DomainType) = List(typ)
-    implicit def declToList(dec: TestDeclaration) = List(dec)
-    implicit val transform = DomainType.toSuccinctType _
-
-	  val objectA = typeObjectA
-	  // def m1(f: Int=>String, c:Char): Boolean
-	  val m1 = Function(
-	      List ( objectA, Function(typeInt, typeString), typeChar ), // parameters
-	      typeBoolean // return type
-		)	
-	  // def m2(a: Int): String 
-	  val m2 = Function(List(objectA, typeInt), typeString)
-	  // def m3(a:Long): String
-	  val m3 = Function(List(objectA, typeLong), typeString)
-	  // def m4(): Char
-	  val m4 = Function(List(objectA), typeChar)
-	  // def m5(a: Int): Long
-	  val m5 = Function(List(objectA, typeInt), typeLong)
-	  // def m6(): String
-	  val m6 = Function(List(objectA), typeString)
-	  // query: typeBoolean → ⊥
-	  val queryType = Function(typeBoolean, typeBottom)
-	  
-	  // NOTE InSynth query type: Arrow(TSet(List(Const(String))),Const($Bottom_Type_Just_For_Resolution$))
-	  
-	  val fullNameClassA = "fullNameClassA"
-	  val objectADeclaration = TestDeclaration(
-	      objectA, // scala type
-	      fullNameClassA // full name
-	  )
-	  
-	  val m1Declaration	= TestDeclaration(
-	      m1,
-	      fullNameClassA + ".m1"
-	  )
-	  val m2Declaration = TestDeclaration(
-	      m2, // inSynth type (implicit conversion)
-	      fullNameClassA + ".m2" // full name
-	  )
-	  val m3Declaration = TestDeclaration(
-	      m3,
-	      fullNameClassA + ".m3" // full name
-      )
-	  val m4Declaration = TestDeclaration(
-	      m4,
-	      fullNameClassA + ".m4" // full name
-      )
-	  val m5Declaration = TestDeclaration(
-	      m5,
-	      fullNameClassA + ".m5" // full name
-      )
-	  val m6Declaration = TestDeclaration(
-	      m6,
-	      fullNameClassA + ".m6" // full name
-      )		
-	  
-	  // special query declaration
-	  val queryDeclaration = TestDeclaration(
-	      queryType, 
-	      "special.name.for.query"
-	    )	  
 	  
 	  //************************************
 	  // InSynth proof trees
 	  //************************************
-	  
-	  // XXX found out that there is a non-needed redundancy, new ContainerNode type
-	  // is actually not needed?
-	  
 	  // goal:ClassA object, type:ClassA
 	  // expression: this	  
 	  val thisNode = new SimpleNode(
@@ -384,7 +320,7 @@ object CommonProofTrees {
 	          transform(typeChar) -> new ContainerNode(MutableSet(m4Node)),
 	          transform(Function(typeInt, typeString)) ->
 	          	new ContainerNode( 
-	          	    MutableSet(composeNode, m2Node, m6Node)
+	          	    MutableSet(composeNode, m2Node/*, m6Node, */)
           	    ),
 	          transform(objectA) -> new ContainerNode(MutableSet(thisNode))
           )

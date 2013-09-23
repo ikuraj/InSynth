@@ -2,6 +2,8 @@ package insynth.common
 
 import insynth.structures._
 
+import scala.language.implicitConversions
+
 object CommonDomainTypes {
   implicit def typeToList(typ: DomainType) = List(typ)
 
@@ -37,6 +39,29 @@ object CommonDomainTypes {
 	      typeBoolean // return type
 		)	
 	  val m2 = Function(typeInt, typeString)
+	}
+
+  object BuildComplexTree {	  
+	  val objectA = typeObjectA
+	  // def m1(f: Int=>String, c:Char): Boolean
+	  val m1 = Function(
+	      List ( objectA, Function(typeInt, typeString), typeChar ), // parameters
+	      typeBoolean // return type
+		)	
+	  // def m2(a: Int): String 
+	  val m2 = Function(List(objectA, typeInt), typeString)
+	  // def m3(a:Long): String
+	  val m3 = Function(List(objectA, typeLong), typeString)
+	  // def m4(): Char
+	  val m4 = Function(List(objectA), typeChar)
+	  // def m5(a: Int): Long
+	  val m5 = Function(List(objectA, typeInt), typeLong)
+	  // def m6(): String
+	  val m6 = Function(List(objectA), typeString)
+	  // query: typeBoolean → ⊥
+	  val queryType = Function(typeBoolean, typeBottom)
+
+	  val intToString = Function(typeInt, typeString)
 	}
     
 }

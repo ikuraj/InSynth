@@ -96,9 +96,10 @@ class StreamerTest extends JUnitSuite {
   	}
   }
 
-  @Ignore
   @Test
   def testComplexTree = {
+    import CommonLambda.BuildComplexTree._
+
     val queryNode = buildComplexTree
     
     val expStream = Streamer(queryNode, true)
@@ -109,22 +110,9 @@ class StreamerTest extends JUnitSuite {
         case other => other
       }
     )
-    
-    val listOfExpressions = List(boolInv, inv1WithInt, inv1WithBoolInv, inv2WithInt,
-      inv3WithInt, inv2WithBoolInv, inv3WithBoolInv)
-    
-    for (exp <- listOfExpressions)
-    	assertTrue(expressions.toSet contains exp)
-    	
-  	{
-	    val listOfExpressionsOrder = List(boolInv, inv2WithInt,
-	      inv2WithBoolInv, inv3WithBoolInv)
-	    
-	    for (ind <- 0 until listOfExpressionsOrder.size - 1)
-	      assertTrue("Expression " + listOfExpressionsOrder(ind) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind)) +
-	        ") should occur before expression " + listOfExpressionsOrder(ind+1) + " (position " + expressions.indexOf(listOfExpressionsOrder(ind + 1)) + ")",
-	        expressions.indexOf(listOfExpressionsOrder(ind)) < expressions.indexOf(listOfExpressionsOrder(ind+1)))
-  	}
+        
+    for (exp <- lambdaNodes)
+    	assertTrue(expressions.toSet.mkString(", ") + " do not contain " + exp, expressions.toSet contains exp)
   }
 
   @Test
