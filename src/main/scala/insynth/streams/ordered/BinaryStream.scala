@@ -45,17 +45,18 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
         val ind = p._1._2
         val currentInd = p._2
         if (isLeft) {
-          fine("isLeft s2.nextReady(currentInd)=" + s2.nextReady(currentInd) + " currentInd=" + currentInd)
+          fine("isLeft s2.nextReady(currentInd)=" + s2.nextReady(currentInd) + " currentInd=" + currentInd + " ind=" + ind)
           res || s2.nextReady(currentInd)
         }
         else {
-          fine("!isLeft s1.nextReady(currentInd)=" + s1.nextReady(currentInd) + " currentInd=" + currentInd)
+          fine("!isLeft s1.nextReady(currentInd)=" + s1.nextReady(currentInd) + " currentInd=" + currentInd + " ind=" + ind)
           res || s1.nextReady(currentInd)
         }
       }
     } || 
     (false /: indexesToCheckSet) {
       (res, ind) => {
+          fine("s1.nextReady(ind) && s2.nextReady(ind)=" + (s1.nextReady(ind) && s2.nextReady(ind)) + " ind=" + ind)
         res || (s1.nextReady(ind) && s2.nextReady(ind))
       }
     }

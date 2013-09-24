@@ -21,7 +21,18 @@ class UnaryStream[T, U](val streamable: OrderedStreamable[T], modify: T=>U, modi
     modifyVal match {
 	    case None => streamable.getValues
 	    case Some(f) => streamable.getValues.map(f)
-  	} 
+  	}
+
+  // terrible hack for debugging
+  override def toString =
+    try { modify(insynth.reconstruction.stream.NullLeaf.asInstanceOf[T]).toString }
+  	catch {
+  	  case _: java.lang.ClassCastException =>
+  	    try { modify(List(insynth.reconstruction.stream.NullLeaf).asInstanceOf[T]).toString }
+  	    catch {
+  	      case _: java.lang.ClassCastException => "Cannot invoke function for print"
+  	    }
+  	}
   
 }
 

@@ -14,7 +14,10 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
   override def isDepleted: Boolean = throw new RuntimeException//getNextIndex._2 == -1 // wtv
   override def nextReady(ind: Int): Boolean = {
     assert(ind <= enumeratedCounter + 1)
-    if (ind <= enumeratedCounter) true
+    if (ind <= enumeratedCounter) {
+	    fine("ready since ind <= enumeratedCounter" + ind + " and " + enumeratedCounter)
+      true
+    }
     else {
 	    val res = if (ind != enumeratingCounter) {
 	      enumeratingCounter = ind
@@ -24,6 +27,7 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
 		    enumeratingCounter = -1
 		    resIn
 	    } else false
+	    
 	    fine("ready for " + ind + "? " + res)
 	    res
     }
@@ -69,7 +73,8 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
       
       fine("from " + this.toString + " checking ready" + streams(indToCheck).toString + " and is " + streams(indToCheck).nextReady(iteratorIndexes(indToCheck)))
       if (streams(indToCheck).nextReady(iteratorIndexes(indToCheck))) {
-        assert(valueIterators(indToCheck).hasNext, "valueIterators(indToCheck).hasNext for " + indToCheck)
+        assert(valueIterators(indToCheck).hasNext,
+          "valueIterators(indToCheck).hasNext for " + indToCheck + "; inner streams: " + streams.mkString("(", ", ", ")"))
 	      fine("checking index: " + indToCheck + ", valueIterators(indToCheck).hasNext: " + valueIterators(indToCheck).hasNext)
 	      if (valueIterators(indToCheck).hasNext) fine("valueIterators(indToCheck).head: " + valueIterators(indToCheck).head)
 	      if (valueIterators(indToCheck).hasNext && valueIterators(indToCheck).head < min) {
