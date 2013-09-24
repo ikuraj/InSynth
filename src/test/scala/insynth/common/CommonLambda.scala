@@ -188,31 +188,31 @@ object CommonLambda {
     val thisIdent = Identifier(objectA, objectADeclaration)
     
 	  val lambdaNodes = Iterable(
-//	      Application(m1, List(
-//		      Identifier(m1, m1Declaration), 
-//		      thisIdent,
-//		      Abstraction(intToString, List(Variable(m2.args(1), "var_1")),
-//	          Application(m2, List(
-//			        Identifier(m2, m2Declaration),        
-//			        thisIdent,
-//			        Identifier(typeInt, intLeafDeclaration))
-//			      )),
-//		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
-//		    )),
-//	      Application(m1, List(
-//		      Identifier(m1, m1Declaration), 
-//		      thisIdent,
-//		      Abstraction(intToString, List(Variable(typeInt, "var_1")),
-//	          Application(m6, List(
-//			        Identifier(m6, m6Declaration),        
-//			        thisIdent)
-//			      )),
-//		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
-//		    )),
 	      Application(m1, List(
 		      Identifier(m1, m1Declaration), 
 		      thisIdent,
-		      Abstraction(intToString, List(Variable(typeInt, "var_1")),
+		      Abstraction(intToString, List(Variable(m2.args(1), "var_2")),
+	          Application(m2, List(
+			        Identifier(m2, m2Declaration),        
+			        thisIdent,
+			        Identifier(typeInt, intLeafDeclaration))
+			      )),
+		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
+		    )),
+	      Application(m1, List(
+		      Identifier(m1, m1Declaration), 
+		      thisIdent,
+		      Abstraction(intToString, List(Variable(typeInt, "var_3")),
+	          Application(m6, List(
+			        Identifier(m6, m6Declaration),        
+			        thisIdent)
+			      )),
+		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
+		    )),
+	      Application(m1, List(
+		      Identifier(m1, m1Declaration), 
+		      thisIdent,
+		      Abstraction(intToString, List(Variable(typeInt, "var_2")),
 	          Application(m3, List(
 			        Identifier(m3, m3Declaration),        
 			        thisIdent,

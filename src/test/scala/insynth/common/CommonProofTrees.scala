@@ -320,7 +320,7 @@ object CommonProofTrees {
 	          transform(typeChar) -> new ContainerNode(MutableSet(m4Node)),
 	          transform(Function(typeInt, typeString)) ->
 	          	new ContainerNode( 
-	          	    MutableSet(composeNode, m2Node/*, m6Node, */)
+	          	    MutableSet(composeNode, m2Node, m6Node)
           	    ),
 	          transform(objectA) -> new ContainerNode(MutableSet(thisNode))
           )

@@ -9,14 +9,14 @@ import org.junit.Assert._
 
 import insynth.common._
 
-class StreamerTest extends JUnitSuite {
+class StreamerTest/* extends JUnitSuite */{
 
   import CommonDeclarations._
   import CommonProofTrees._
   import CommonUtils._
   import CommonLambda._
   
-  @Ignore
+  
   @Test
   def treeBoolToInt {
     val (queryNode, query) = exampleBoolToInt
@@ -31,7 +31,7 @@ class StreamerTest extends JUnitSuite {
     assertEquals(0f, result._2, 0f)    
   }
   
-  @Ignore
+  
   @Test
   def treeIntToIntBoth {
     val queryNode = exampleIntToIntBoth
@@ -55,7 +55,7 @@ class StreamerTest extends JUnitSuite {
     assertTrue(message, expressions contains inv3WithBoolInv)      
   }
   
-  @Ignore
+  
   @Test
   def treeIntToIntBothOrdered {
     val queryNode = exampleIntToIntBoth
@@ -97,7 +97,7 @@ class StreamerTest extends JUnitSuite {
   }
 
   @Test
-  def testComplexTree = {
+  def testComplexTree {
     import CommonLambda.BuildComplexTree._
 
     val queryNode = buildComplexTree
@@ -111,10 +111,17 @@ class StreamerTest extends JUnitSuite {
       }
     )
         
-    for (exp <- lambdaNodes)
-    	assertTrue(expressions.toSet.mkString(", ") + " do not contain " + exp, expressions.toSet contains exp)
+    for (expectedExp <- lambdaNodes) {
+      val isFound = (false /: expressions) {
+        (res, exp) => res || compareNodesModuloVariableName(exp, expectedExp)
+      }
+      
+    	assertTrue(expressions.toSet.mkString("\n---\n")  + " do not contain (module variable names) " + expectedExp,
+  	    isFound)
+    }
   }
 
+  
   @Test
   def testLigtherComplexTree = {    
     import CommonLambda.BuildLighterComplexTree._
@@ -130,7 +137,7 @@ class StreamerTest extends JUnitSuite {
     )
     
     for (exp <- lambdaNodes)
-    	assertTrue(expressions.toSet.mkString(", ") + " do not contain " + exp, expressions.toSet contains exp)
+    	assertTrue(expressions.toSet.mkString("\n---\n") + " do not contain " + exp, expressions.toSet contains exp)
   }
 
 }
