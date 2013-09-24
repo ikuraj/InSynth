@@ -10,7 +10,7 @@ import org.scalatest.matchers._
 class SolverTest extends FunSpec with GivenWhenThen with ShouldMatchers {    
   
   import CommonDeclarations._
-  import CommonSuccinctTypes._
+  import CommonDomainTypes._
   import insynth.util.ProofTreeOperations._
 
   describe("Solver") {

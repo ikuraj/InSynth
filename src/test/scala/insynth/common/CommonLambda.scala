@@ -19,7 +19,7 @@ object CommonLambda {
   val booleanIdentifier = Identifier(typeBoolean, booleanDeclaration)
   
   def constructBooleanToIntIntermediateLambda = {
-    val query = new QueryBuilder(st.typeInt)
+    val query = new QueryBuilder(typeInt)
 
     val functionApplication =
       Application(
@@ -39,7 +39,7 @@ object CommonLambda {
   }
   
   def constructIntToIntIntermediateFirstLambda(x: Int) = {
-    val query = new QueryBuilder(st.typeInt)
+    val query = new QueryBuilder(typeInt)
 
     val functionApplication =
       Application(
@@ -68,7 +68,7 @@ object CommonLambda {
   }    
   
   def constructIntAndBoolToIntIntermediateLambda(x: Int) = {
-    val query = new QueryBuilder(st.typeInt)
+    val query = new QueryBuilder(typeInt)
 
     val functionApplicationBoolean =
       Application(
@@ -104,7 +104,7 @@ object CommonLambda {
   }  
   
   def constructThreeParFunctionIntermediateLambda(x: Int) = {
-    val query = new QueryBuilder(st.typeInt)
+    val query = new QueryBuilder(typeInt)
 
     val listOfApplication =
       ((List(Identifier(typeInt, intDeclaration), Identifier(typeInt, intDeclaration)): List[Node]) /: (1 to x)) {
