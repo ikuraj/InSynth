@@ -109,6 +109,10 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
 	  		    iteratorIndexes(nextIndex) += 1
 	  		    // forward the value iterator
 	  		    valueIterators(nextIndex).next
+
+	  		    // increase only when there is actually next element 
+  		    	enumeratedCounter += 1
+	  		    
 				    // prepend the element to a recursively computed stream
 				  	(iterators(nextIndex).next, nextValue) #:: loopXXX((index + 1) % streams.size)
 	  		  case _ =>
@@ -116,7 +120,6 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
 					  Stream.empty  		    
 	  		}
       
-      enumeratedCounter += 1
       enumeratingCounter = -1
       res
     }
