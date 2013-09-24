@@ -2,7 +2,7 @@ package insynth.common
 
 import insynth.structures._
 
-import insynth.testdomain._
+import insynth.testdomain.{ TestQueryBuilder => QueryBuilder, _ }
 
 import scala.language.implicitConversions
 
@@ -85,6 +85,15 @@ object CommonDeclarations {
 	      queryType, 
 	      "special.name.for.query"
 	    )	  
+  }
+
+  object BuildMultipleVarTree {
+    import CommonDomainTypes.BuildMultipleVarTree._
+        
+	  val m1Declaration	= TestDeclaration(m1, "m1")
+	  
+    val queryBuilder = new QueryBuilder(queryType)
+    val queryDeclaration = queryBuilder.getQuery.getDeclaration
   }
 
 }

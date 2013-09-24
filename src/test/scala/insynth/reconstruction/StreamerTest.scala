@@ -140,6 +140,30 @@ class StreamerTest/* extends JUnitSuite */{
     	assertTrue(expressions.toSet.mkString("\n---\n") + " do not contain " + exp, expressions.toSet contains exp)
   }
 
+  @Test
+  def testMultipleVarTree = {    
+    import CommonLambda.BuildMultipleVarTree._
+    
+    val queryNode = buildMultipleVarTree
+    val expStream = Streamer(queryNode, true)
+    
+    val expressions = assertTake(expStream, 20).map(
+      _._1 match {
+        case Application(_, funId :: onlyArg :: Nil) => onlyArg
+        case other => other
+      }
+    )
+    assertEquals(2, expressions.size)
+    
+    for (expectedExp <- expressions) {
+      val isFound = (false /: lambdaNodes) {
+        (res, exp) => res || compareNodesModuloVariableName(exp, expectedExp)
+      }
+      
+    	assertTrue(lambdaNodes.toSet.mkString("\n---\n")  + " do not contain (module variable names) " + expectedExp, isFound)
+    }
+  }
+
 }
 
 //object ReconstructorTest {

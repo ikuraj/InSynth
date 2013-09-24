@@ -227,6 +227,21 @@ object CommonLambda {
 	    )
 	}
   
+  
+  object BuildMultipleVarTree {
+    import CommonDomainTypes.BuildMultipleVarTree._
+    import CommonDeclarations.BuildMultipleVarTree._
+    
+    val var1 = Variable(typeInt, "var_1")
+    val var2 = Variable(typeInt, "var_2")
+    
+	  val lambdaNodes = Iterable(
+      Abstraction(queryType, List(var1, var2),
+    		Application(m1, List(var1))
+  		)
+    )
+	}
+    
   // TODO do if we need abstraction (high-order functions)
 //  def constructFunctionIntToIntIntermediateLambda = {
 //    val query = new QueryBuilder(FunctionType(List(Int32Type), Int32Type))

@@ -63,5 +63,11 @@ object CommonDomainTypes {
 
 	  val intToString = Function(typeInt, typeString)
 	}
+
+  object BuildMultipleVarTree {	  
+	  val m1 = Function( typeInt, typeString )
+
+	  val queryType = Function(typeInt, Function(typeInt, typeString))
+	}
     
 }

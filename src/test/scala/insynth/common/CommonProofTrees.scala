@@ -12,6 +12,7 @@ import scala.language.implicitConversions
 object CommonProofTrees {
   implicit def typeToList(typ: DomainType) = List(typ)
   implicit def declToList(dec: TestDeclaration) = List(dec)
+  implicit def nodeToSet(n: SimpleNode) = MutableSet(n)
   implicit val transform = DomainType.toSuccinctType _
 
   import CommonDeclarations._
@@ -219,6 +220,11 @@ object CommonProofTrees {
   }
 
   // InSynth example trees
+
+  val intLeafNode =
+    new SimpleNode(
+      List(intDeclaration),
+      MutableMap.empty)
   
 	//***************************************************
 	// Goals
@@ -369,6 +375,35 @@ object CommonProofTrees {
 	  	  queryDeclaration,
 	  	  MutableMap( // for each parameter type - how can we resolve it
 	  	      transform(typeBoolean) ->
+	  	      new ContainerNode(
+	  	          MutableSet(m1Node)
+	            )
+	        ) 
+	    )
+	    
+	  queryNode
+  }
+
+	//***************************************************
+  // exercise outputting all variable (name) combinations
+	//	find expression of type: Int => Int => String
+	//	code:	def m1: Int => String
+	//	expression: query(m1(var_1) | m1(var_2))
+
+  def buildMultipleVarTree = {
+    import CommonDomainTypes.BuildMultipleVarTree._
+    import CommonDeclarations.BuildMultipleVarTree._
+	  
+    val m1Node = new SimpleNode(
+  		m1Declaration,
+      MutableMap( transform(typeInt) -> new ContainerNode(intLeafNode) )
+    )
+
+	  val queryNode = 
+	    new SimpleNode(
+	  	  queryDeclaration,
+	  	  MutableMap( // for each parameter type - how can we resolve it
+	  	      transform(queryType) ->
 	  	      new ContainerNode(
 	  	          MutableSet(m1Node)
 	            )
