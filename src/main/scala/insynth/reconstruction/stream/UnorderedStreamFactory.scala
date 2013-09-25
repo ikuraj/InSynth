@@ -20,8 +20,11 @@ class UnorderedStreamFactory[T] extends StreamFactory[T] {
   override def makeUnaryStreamList[X, Y <: T](streamable: Streamable[X], modify: X => List[Y]) =
     UnaryStream(streamable, modify)
   
-  override def makeBinaryStream[X, Y, Z <: T](s1: Streamable[X], s2: Streamable[Y])(combine: (X, Y) => List[Z]) =
+  override def makeBinaryStreamToList[X, Y, Z <: T](s1: Streamable[X], s2: Streamable[Y])(combine: (X, Y) => List[Z]) =
     BinaryStream(s1, s2)(combine)
+
+  override def makeBinaryStream[X, Y <: T, Z <: T](s1: Streamable[X], s2: Streamable[List[Y]])
+  	(combine: (X, List[Y]) => Z) = BinaryStream(s1, s2)(combine)
   
   override def makeRoundRobbin[U <: T](streams: Seq[Streamable[U]]) =
     RoundRobbin(streams)

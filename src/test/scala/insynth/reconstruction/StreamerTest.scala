@@ -9,7 +9,7 @@ import org.junit.Assert._
 
 import insynth.common._
 
-class StreamerTest/* extends JUnitSuite */{
+class StreamerTest extends JUnitSuite {
 
   import CommonDeclarations._
   import CommonProofTrees._

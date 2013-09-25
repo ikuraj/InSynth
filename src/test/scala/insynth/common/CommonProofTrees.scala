@@ -221,10 +221,7 @@ object CommonProofTrees {
 
   // InSynth example trees
 
-  val intLeafNode =
-    new SimpleNode(
-      List(intDeclaration),
-      MutableMap.empty)
+  val intLeafNode = new SimpleNode(List(intLeafDeclaration), MutableMap.empty)
   
 	//***************************************************
 	// Goals
@@ -273,11 +270,7 @@ object CommonProofTrees {
 	      MutableMap(
 	          transform(objectA) -> new ContainerNode(MutableSet(thisNode)),
 	          transform(typeInt) ->
-	          	new ContainerNode(MutableSet(new SimpleNode(
-	          	    { 
-	          	      val dec = new TestDeclaration(typeInt); dec	          	    	
-	          	    }, MutableMap.empty
-          	    )))
+	          	new ContainerNode(MutableSet(intLeafNode))
           )
       )      
       
@@ -296,13 +289,7 @@ object CommonProofTrees {
 	      m5Declaration,
 	      MutableMap(
 	          transform(objectA) -> new ContainerNode(MutableSet(thisNode)),
-	          transform(typeInt) -> new ContainerNode( 
-	          	MutableSet( new SimpleNode(
-	          	    { 
-	          	      val dec = new TestDeclaration(typeInt); dec	          	    	
-	          	    }, MutableMap.empty
-          	    ) )
-	          )
+	          transform(typeInt) -> new ContainerNode(MutableSet(intLeafNode))
           )
       )
       
@@ -357,7 +344,6 @@ object CommonProofTrees {
     val queryBuilder = new QueryBuilder(typeBoolean)
     val queryDeclaration = queryBuilder.getQuery.getDeclaration
 
-	  val intLeafNode = new SimpleNode(intLeafDeclaration, MutableMap.empty)
     val m2Node = new SimpleNode(m2Declaration, MutableMap(
       transform(typeInt) -> new ContainerNode(MutableSet(intLeafNode))
     ))

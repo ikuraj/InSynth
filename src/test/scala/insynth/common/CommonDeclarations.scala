@@ -35,6 +35,7 @@ object CommonDeclarations {
   )
 
   val intLeafDeclaration = new TestDeclaration(typeInt)
+  intLeafDeclaration.isAbstract_ = true
   
   object BuildLighterComplexTree {
     import CommonDomainTypes.BuildLighterComplexTree._

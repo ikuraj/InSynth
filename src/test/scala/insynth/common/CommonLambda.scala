@@ -166,7 +166,8 @@ object CommonLambda {
   val inv3WithBoolInv = Application(functionIntToIntType, List(
     Identifier(functionIntToIntType, functionIntToIntDeclaration), inv2WithBoolInv))
   
-  val intLeafNode = Identifier(typeInt, intLeafDeclaration)
+  val intIdentifier = Identifier(typeInt, intLeafDeclaration)
+  val intVar = Variable(typeInt, "var_1")
     
   object BuildLighterComplexTree {
     import CommonDomainTypes.BuildLighterComplexTree._
@@ -176,7 +177,7 @@ object CommonLambda {
       Identifier(m1, m1Declaration),
       Abstraction(m2, Variable(m2.args.head, "var_1"), Application(m2, List(
         Identifier(m2, m2Declaration),
-        intLeafNode))
+        intVar))
       ) 
     ))
 	}
@@ -195,7 +196,7 @@ object CommonLambda {
 	          Application(m2, List(
 			        Identifier(m2, m2Declaration),        
 			        thisIdent,
-			        Identifier(typeInt, intLeafDeclaration))
+			        intVar)
 			      )),
 		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
 		    )),
@@ -219,7 +220,7 @@ object CommonLambda {
 			        Application(m5, List(
 				        Identifier(m5, m5Declaration),        
 				        thisIdent,
-				        intLeafNode
+				        intVar
 		        		))
 			      ))),
 		      Application(m4, List( Identifier(m4, m4Declaration), thisIdent ))
@@ -236,8 +237,10 @@ object CommonLambda {
     val var2 = Variable(typeInt, "var_2")
     
 	  val lambdaNodes = Iterable(
-      Abstraction(queryType, List(var1, var2),
-    		Application(m1, List(var1))
+      Abstraction(queryType, List(var1),
+    		Abstraction(queryType.retType, List(var2),
+  				Application(m1, List(Identifier(m1, m1Declaration), var1))
+    		)
   		)
     )
 	}

@@ -63,7 +63,7 @@ case class Application(tpe: DomainType, params: List[Node]) extends Node {
   def getType = tpe
   def getParams = params
   
-  override def toString = params.head.toString + params.tail.mkString("(", ", ", ")")
+  override def toString = "App{" + params.head.toString + params.tail.mkString("(", ", ", ")") + "}"
     //debugging
     //tpe + "-" + params.head.toString + params.tail.mkString("(", ", ", ")")
 }
@@ -71,8 +71,10 @@ case class Application(tpe: DomainType, params: List[Node]) extends Node {
 /**
  * abstraction element introduces new variable into the typing context
  */
-case class Abstraction(tpe: DomainType, vars: List[Variable], subTrees: Node) extends Node {
+case class Abstraction(tpe: DomainType, vars: List[Variable], subTree: Node) extends Node {
   def getType = tpe
+
+  override def toString = "Abs{[" + tpe + "]" + vars.mkString("", ", ", "") + "." + subTree + "}"
 }
 
 // for debugging

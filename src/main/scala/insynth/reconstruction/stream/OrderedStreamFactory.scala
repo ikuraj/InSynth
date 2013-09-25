@@ -22,8 +22,11 @@ class OrderedStreamFactory[T] extends StreamFactory[T] with HasLogger {
   override def makeUnaryStreamList[X, Y <: T](streamable: Streamable[X], modify: X => List[Y]) =
     UnaryStream(streamable.asInstanceOf[OrderedStreamable[X]], modify)
   
-  override def makeBinaryStream[X, Y, Z <: T](s1: Streamable[X], s2: Streamable[Y])(combine: (X, Y) => List[Z]) =
+  override def makeBinaryStreamToList[X, Y, Z <: T](s1: Streamable[X], s2: Streamable[Y])(combine: (X, Y) => List[Z]) =
     BinaryStream(s1.asInstanceOf[OrderedStreamable[X]], s2.asInstanceOf[OrderedStreamable[Y]])(combine)
+
+  override def makeBinaryStream[X, Y <: T, Z <: T](s1: Streamable[X], s2: Streamable[List[Y]])
+  	(combine: (X, List[Y]) => Z) = BinaryStream(s1.asInstanceOf[OrderedStreamable[X]], s2.asInstanceOf[OrderedStreamable[List[Y]]])(combine)
   
   override def makeRoundRobbin[U <: T](streams: Seq[Streamable[U]]) =
     RoundRobbin(streams.asInstanceOf[Seq[OrderedStreamable[U]]])
