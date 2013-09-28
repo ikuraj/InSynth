@@ -398,5 +398,168 @@ object CommonProofTrees {
 	    
 	  queryNode
   }
+  
+	//***************************************************
+	// Constructs a tree with an function as goal type.
+	//	find expression of type: (Int, Int)→Char
+	//	code:
+	// 	class A {
+	//		val intVal: Int  
+	//  	def m1(): ((Int, Int)=>Char)
+	//  	def test() {
+	//    		val b:(Int, Int)=>Char = ?synthesize?
+	//  	}
+	//	}
+	//	expression: 
+  //	(Int,Int) -> m1(this)(_,_) | (Int,Int) -> m1(this)(intVal, intVal)
+  //	(Int,Int) -> m2(this,_,_) | m2(this, intVal, intVal)
+  //	(Int,Int) -> m3(this) | outside
+	//***************************************************
+	def buildArrowTypeTree = {
+    import CommonDomainTypes.BuildTreeArrowTypeTree._
+    import CommonDeclarations.BuildTreeArrowTypeTree._
+	  
+	  // goal:A, type: A
+	  // expression: d.fullname
+	  val thisNode = new SimpleNode(
+	      objectADeclaration,
+	      MutableMap()
+      )
+      
+      // goal:Int, type:Int
+	  // expression: A.intVal	  
+	  val intValNode = new SimpleNode(
+	      intValDeclaration,
+	      MutableMap()
+      )
+	  
+	  // goal:(Int→Char), type:A→Int→Char
+	  // expression: (Int,Int) → m1(this)(_, _)	  
+	  val m1Node = new SimpleNode(
+	      m1Declaration,
+	      MutableMap(
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode)),
+	          transform(typeInt) -> new ContainerNode(
+	              MutableSet(new SimpleNode(leafIntDeclaration, MutableMap.empty), intValNode))
+          )
+      )
+      
+      // goal:⊥, type:(Int→Char)→⊥	    
+      // expression: query	(		
+      //	(Int,Int) -> m1(this)(_,_) | (Int,Int) -> m1(this)(intVal, intVal)
+	  //	(Int,Int) -> m2(this,_,_) | m2(this, intVal, intVal)
+      //	(Int,Int) -> m3(this) | outside
+      //					):⊥
+	  val queryNode = 
+	    new SimpleNode(
+	  	  queryDeclaration,
+	  	  MutableMap( // for each parameter type - how can we resolve it
+	  	      transform(Function(List(typeInt, typeInt), typeChar)) ->
+	  	      new ContainerNode(
+	  	          MutableSet(m1Node/*, outsideNode, m2Node, m3Node*/)
+	            )
+	        ) 
+	    )
+      queryNode
+	}
+  
+	//***************************************************
+	// Constructs a tree with an function as goal type.
+	//	find expression of type: (Int, Int)→Char
+	//	code:
+	//  def outside(a: Int, b:Int): Char
+	// 	class A {
+	//		val intVal: Int  
+	//  	def m1(): ((Int, Int)=>Char)
+	//  	def m2(a: Int, b:Int): Char
+	//  	def m3(): Char
+	//  	def test() {
+	//    		val b:(Int, Int)=>Char = ?synthesize?
+	//  	}
+	//	}
+	//	expression: 
+  //	(Int,Int) -> m1(this)(_,_) | (Int,Int) -> m1(this)(intVal, intVal)
+  //	(Int,Int) -> m2(this,_,_) | m2(this, intVal, intVal)
+  //	(Int,Int) -> m3(this) | outside
+	//***************************************************
+	def buildArrowTypeTreeMoreComplex = {
+    import CommonDomainTypes.BuildTreeArrowTypeTree._
+    import CommonDeclarations.BuildTreeArrowTypeTree._
+	  
+	  // goal:A, type: A
+	  // expression: d.fullname
+	  val thisNode = new SimpleNode(
+	      objectADeclaration,
+	      MutableMap()
+      )
+      
+      // goal:Int, type:Int
+	  // expression: A.intVal	  
+	  val intValNode = new SimpleNode(
+	      intValDeclaration,
+	      MutableMap()
+      )
+	  
+	  // goal:(Int→Char), type:A→Int→Char
+	  // expression: (Int,Int) → m1(this)(_, _)	  
+	  val m1Node = new SimpleNode(
+	      m1Declaration,
+	      MutableMap(
+	          transform(objectA) -> new ContainerNode(MutableSet(thisNode)),
+	          transform(typeInt) -> new ContainerNode(
+	              MutableSet(new SimpleNode(leafIntDeclaration, MutableMap.empty), intValNode))
+          )
+      )
+      
+      // goal:(Int→Char), type:((Int,A)→Char)
+	  // expression: (Int, Int) → m2(this, _, _)	  
+	  val m2Node = new SimpleNode(
+	      m2Declaration,
+	      MutableMap(
+	        transform(typeInt) -> 
+        	  new ContainerNode(MutableSet(new SimpleNode(leafIntDeclaration, MutableMap.empty), intValNode)),
+	        transform(objectA) ->
+        	  new ContainerNode(MutableSet(thisNode))
+          )
+      )     
+
+      // goal:(Int→Char), type:(Int→Char)
+	  // expression: d.fullName ("outside")	  
+	  val outsideNode = new SimpleNode(
+	      outsideDeclaration,
+	      MutableMap(
+	          transform(typeInt) -> new ContainerNode(
+	              MutableSet(new SimpleNode(leafIntDeclaration, MutableMap.empty), intValNode))
+          )
+      )
+      
+      // goal:(Char), type:(A→Char)
+	  // expression: (Int,Int)→m3(A)	  
+	  val m3Node = new SimpleNode(
+	      m3Declaration,
+	      MutableMap(
+	        transform(objectA) -> 
+	          new ContainerNode(MutableSet(thisNode))
+          )
+      )
+	  
+      // goal:⊥, type:(Int→Char)→⊥	    
+      // expression: query	(		
+      //	(Int,Int) -> m1(this)(_,_) | (Int,Int) -> m1(this)(intVal, intVal)
+	  //	(Int,Int) -> m2(this,_,_) | m2(this, intVal, intVal)
+      //	(Int,Int) -> m3(this) | outside
+      //					):⊥
+	  val queryNode = 
+	    new SimpleNode(
+	  	  queryDeclaration,
+	  	  MutableMap( // for each parameter type - how can we resolve it
+	  	      transform(Function(List(typeInt, typeInt), typeChar)) ->
+	  	      new ContainerNode(
+	  	          MutableSet(m1Node, outsideNode, m2Node, m3Node)
+	            )
+	        ) 
+	    )
+      queryNode
+	}
 
 }

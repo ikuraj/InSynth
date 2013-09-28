@@ -5,6 +5,7 @@ import insynth.reconstruction.stream._
 import insynth.testdomain.{ TestQueryBuilder => QueryBuilder }
 
 import scala.language.implicitConversions
+import scala.language.postfixOps
 
 object CommonLambda {
   implicit def nodeToListNode(node: Node) = List(node) 
@@ -228,7 +229,6 @@ object CommonLambda {
 	    )
 	}
   
-  
   object BuildMultipleVarTree {
     import CommonDomainTypes.BuildMultipleVarTree._
     import CommonDeclarations.BuildMultipleVarTree._
@@ -243,6 +243,73 @@ object CommonLambda {
     		)
   		)
     )
+	}
+  
+  object BuildArrowTypeTree {
+    import CommonDomainTypes.BuildTreeArrowTypeTree._
+    import CommonDeclarations.BuildTreeArrowTypeTree._
+    
+	  //  expression: 
+	  //	(Int,Int) -> m1(this)(_,_)
+    
+    val var1 = Variable(typeInt, "var_1")
+    val var2 = Variable(typeInt, "var_2")
+    
+    val thisIdent = Identifier(objectA, objectADeclaration)
+    val intValA = Identifier(typeInt, intValDeclaration)
+
+    def makeM1Application(n1: Node, n2: Node) =
+  		Abstraction(intIntToChar, List(var1, var2),
+		    Application(intIntToChar, List(
+		    	// NOTE its not the same function type since its return type is used in application
+	    		Application(m1, List(Identifier(m1, m1Declaration), thisIdent)),
+	    		n1, n2
+	    		)
+				)
+  		)
+    
+	  val lambdaNodes = Iterable(
+  		makeM1Application(var1, var2),
+  		makeM1Application(var1, intValA),
+  		makeM1Application(intValA, var1),
+  		makeM1Application(intValA, intValA)
+    )
+	}
+  
+  object BuildArrowTypeTreeMoreComplex {
+    import BuildArrowTypeTree._
+    import CommonDomainTypes.BuildTreeArrowTypeTree._
+    import CommonDeclarations.BuildTreeArrowTypeTree._
+    
+	  //  expression: 
+	  //	(Int,Int) -> m1(this)(_,_) | (Int,Int) -> m1(this)(intVal, intVal)
+	  //	(Int,Int) -> m2(this,_,_) | m2(this, intVal, intVal)
+	  //	(Int,Int) -> m3(this) | outside
+    
+    def makeM2Application(n1: Node, n2: Node) =
+  		Abstraction(intIntToChar, List(var1, var2),
+		    Application(m2, List(
+		    	// NOTE its not the same function type since its return type is used in application
+	    		Identifier(m2, m2Declaration), thisIdent, n1, n2
+    		))
+  		)
+
+    def makeM3Application =
+  		Abstraction(intIntToChar, List(var1, var2),
+    		Application(m3, List(Identifier(m3, m3Declaration), thisIdent))
+  		)
+
+    def makeOutsideApplication(n1: Node, n2: Node) =
+  		Abstraction(intIntToChar, List(var1, var2),
+		    Application(outside, List(
+	    		Identifier(outside, outsideDeclaration), n1, n2
+				))
+  		)
+    
+	  val lambdaNodes =
+      (for (n1 <- List(var1, var2, intValA); n2 <- List(var1, var2, intValA)) yield {
+        makeM1Application(n1, n2) :: makeM2Application(n1, n2) :: makeOutsideApplication(n1, n2)
+      }).flatten.distinct :+ makeM3Application
 	}
     
   // TODO do if we need abstraction (high-order functions)
