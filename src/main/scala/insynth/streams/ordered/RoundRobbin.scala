@@ -12,6 +12,7 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
   override def isInfinite = isInfiniteFlag
   
   override def isDepleted: Boolean = throw new RuntimeException//getNextIndex._2 == -1 // wtv
+
   override def nextReady(ind: Int): Boolean = {
     assert(ind <= enumeratedCounter + 1)
     if (ind <= enumeratedCounter) {
@@ -36,7 +37,8 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
   
   // TODO merge into one counter
   var enumeratedCounter = -1
-  // dealing with loops
+  // dealing with loops, tells us if the hasNext has already been called on this streamable
+  // with that value
   var enumeratingCounter = -1
   
   // iterators that track the positions in each stream
@@ -51,6 +53,7 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
     }
     _iterators(ind)
   }
+
   protected def valueIterators(ind: Int) = {
     if (_valueIterators(ind) == null) {
       _valueIterators(ind) = streams(ind).getValues.iterator.buffered 
@@ -64,14 +67,15 @@ class RoundRobbin[T] protected[streams] (val streams: Seq[Streamable[T]])
   
   // NOTE keeps fairness
   private def getNextIndex = {
-    //entering("getNextIndex", currentInd.toString)
+    entering("getNextIndex", "currentInd=%s, iteratorIndexes=%s".format(currentInd.toString, iteratorIndexes.mkString(", ")))
     var min = Int.MaxValue
     var minInd = -1
     var ind = 0
     while (ind < valueIteratorsSize) {
       val indToCheck = (currentInd + ind) % valueIteratorsSize
       
-      fine("from " + this.toString + " checking ready" + streams(indToCheck).toString + " and is " + streams(indToCheck).nextReady(iteratorIndexes(indToCheck)))
+      fine("checking nextReady for stream" + indToCheck + " with ind " + iteratorIndexes(indToCheck) +
+        " and is " + streams(indToCheck).nextReady(iteratorIndexes(indToCheck)))
       if (streams(indToCheck).nextReady(iteratorIndexes(indToCheck))) {
         assert(valueIterators(indToCheck).hasNext,
           "valueIterators(indToCheck).hasNext for " + indToCheck + "; inner streams: " + streams.mkString("(", ", ", ")"))

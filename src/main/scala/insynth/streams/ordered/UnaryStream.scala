@@ -24,15 +24,20 @@ class UnaryStream[T, U](val streamable: OrderedStreamable[T], modify: T=>U, modi
   	}
 
   // terrible hack for debugging
-  override def toString =
-    try { modify(insynth.reconstruction.stream.NullLeaf.asInstanceOf[T]).toString }
+  override def toString = {
+    object markNode extends insynth.reconstruction.stream.Leaf(null) {
+      override def toString = "_"
+    } 
+    
+    try { modify(markNode.asInstanceOf[T]).toString }
   	catch {
   	  case _: java.lang.ClassCastException =>
-  	    try { modify(List(insynth.reconstruction.stream.NullLeaf).asInstanceOf[T]).toString }
+  	    try { modify(List(markNode).asInstanceOf[T]).toString }
   	    catch {
   	      case _: java.lang.ClassCastException => "Cannot invoke function for print"
   	    }
   	}
+  }
   
 }
 

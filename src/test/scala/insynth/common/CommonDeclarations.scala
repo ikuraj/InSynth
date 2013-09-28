@@ -2,7 +2,9 @@ package insynth.common
 
 import insynth.structures._
 
-import insynth.testdomain._
+import insynth.testdomain.{ TestQueryBuilder => QueryBuilder, _ }
+import insynth.testdomain.{ TestDeclaration => Declaration, _ }
+
 
 import scala.language.implicitConversions
 
@@ -35,6 +37,14 @@ object CommonDeclarations {
   )
 
   val intLeafDeclaration = new TestDeclaration(typeInt)
+  intLeafDeclaration.isAbstract_ = true
+  val leafIntDeclaration = intLeafDeclaration
+  
+  val fullNameClassA = "fullNameClassA"
+  val objectADeclaration = TestDeclaration(
+      objectA, // scala type
+      fullNameClassA // full name
+  )
   
   object BuildLighterComplexTree {
     import CommonDomainTypes.BuildLighterComplexTree._
@@ -50,12 +60,6 @@ object CommonDeclarations {
   object BuildComplexTree {
     import CommonDomainTypes.BuildComplexTree._    
 
-	  val fullNameClassA = "fullNameClassA"
-
-	  val objectADeclaration = TestDeclaration(
-	      objectA, // scala type
-	      fullNameClassA // full name
-	  )
 	  val m1Declaration	= TestDeclaration(
 	      m1,
 	      fullNameClassA + ".m1"
@@ -85,6 +89,46 @@ object CommonDeclarations {
 	      queryType, 
 	      "special.name.for.query"
 	    )	  
+  }
+
+  object BuildMultipleVarTree {
+    import CommonDomainTypes.BuildMultipleVarTree._
+        
+	  val m1Declaration	= TestDeclaration(m1, "m1")
+	  
+    val queryBuilder = new QueryBuilder(queryType)
+    val queryDeclaration = queryBuilder.getQuery.getDeclaration
+  }
+
+  object BuildTreeArrowTypeTree {
+    import CommonDomainTypes.BuildTreeArrowTypeTree._
+
+	  val objectADeclaration = Declaration(
+      objectA, fullNameClassA
+    )
+	  
+	  val m1Declaration	= Declaration(
+      m1, fullNameClassA + ".m1"
+	  )
+
+	  val m2Declaration = Declaration(
+      m2, fullNameClassA + ".m2"
+	  )
+	  val m3Declaration = Declaration(
+      m3, fullNameClassA + ".m3"
+    )	  
+	  
+	  // special query declaration
+	  val queryDeclaration = Declaration(
+      queryType, "special.name.for.query"    
+    )
+	  
+	  val outsideDeclaration = Declaration(
+      outside, "outside"
+    )	 
+	  val intValDeclaration = Declaration(
+      intVal, "A.intVal"
+    )	 
   }
 
 }

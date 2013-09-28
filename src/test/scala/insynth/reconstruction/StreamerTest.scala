@@ -9,13 +9,14 @@ import org.junit.Assert._
 
 import insynth.common._
 
-class StreamerTest/* extends JUnitSuite */{
+class StreamerTest extends JUnitSuite {
 
   import CommonDeclarations._
   import CommonProofTrees._
   import CommonUtils._
   import CommonLambda._
   
+  val maxNumberToEnumerate = 200
   
   @Test
   def treeBoolToInt {
@@ -104,7 +105,7 @@ class StreamerTest/* extends JUnitSuite */{
     
     val expStream = Streamer(queryNode, true)
     
-    val expressions = assertTake(expStream, 20).map(
+    val expressions = assertTake(expStream, maxNumberToEnumerate).map(
       _._1 match {
         case Application(_, funId :: onlyArg :: Nil) => onlyArg
         case other => other
@@ -129,7 +130,7 @@ class StreamerTest/* extends JUnitSuite */{
     val queryNode = buildLighterComplexTree
     val expStream = Streamer(queryNode, true)
     
-    val expressions = assertTake(expStream, 20).map(
+    val expressions = assertTake(expStream, maxNumberToEnumerate).map(
       _._1 match {
         case Application(_, funId :: onlyArg :: Nil) => onlyArg
         case other => other
@@ -138,6 +139,80 @@ class StreamerTest/* extends JUnitSuite */{
     
     for (exp <- lambdaNodes)
     	assertTrue(expressions.toSet.mkString("\n---\n") + " do not contain " + exp, expressions.toSet contains exp)
+  }
+
+  @Test
+  def testMultipleVarTree = {    
+    import CommonLambda.BuildMultipleVarTree._
+    
+    val queryNode = buildMultipleVarTree
+    val expStream = Streamer(queryNode, true)
+    
+    val expressions = assertTake(expStream, maxNumberToEnumerate).map(
+      _._1 match {
+        case Application(_, funId :: onlyArg :: Nil) => onlyArg
+        case other => other
+      }
+    )
+    assertEquals(2, expressions.size)
+    
+    for (expectedExp <- expressions) {
+      val isFound = (false /: lambdaNodes) {
+        (res, exp) => res || compareNodesModuloVariableName(exp, expectedExp)
+      }
+      
+    	assertTrue(lambdaNodes.toSet.mkString("\n---\n")  + " do not contain (module variable names) " + expectedExp, isFound)
+    }
+  }
+
+  @Test
+  def testArrowTypeTree = {    
+    import CommonLambda.BuildArrowTypeTree._
+    
+    val queryNode = buildArrowTypeTree
+    val expStream = Streamer(queryNode, true)
+    
+    val expressions = assertTake(expStream, maxNumberToEnumerate).map(
+      _._1 match {
+        case Application(_, funId :: onlyArg :: Nil) => onlyArg
+        case other => other
+      }
+    )
+    assertEquals(expressions.mkString("\n\n"), 9, expressions.size)
+    
+    for (expectedExp <- lambdaNodes) {
+      val isFound = (false /: expressions) {
+        (res, exp) => res || compareNodesModuloVariableName(exp, expectedExp)
+      }
+      
+    	assertTrue(expressions.mkString("\n---\n")  + " do not contain (module variable names) " + expectedExp,
+  	    isFound)
+    }
+  }
+
+  @Test
+  def testArrowTypeTreeMoreComplex = {    
+    import CommonLambda.BuildArrowTypeTreeMoreComplex._
+    
+    val queryNode = buildArrowTypeTreeMoreComplex
+    val expStream = Streamer(queryNode, true)
+    
+    val expressions = assertTake(expStream, maxNumberToEnumerate).map(
+      _._1 match {
+        case Application(_, funId :: onlyArg :: Nil) => onlyArg
+        case other => other
+      }
+    )
+    assertEquals(expressions.mkString("\n\n"), lambdaNodes.size, expressions.size)
+    
+    for (expectedExp <- lambdaNodes) {
+      val isFound = (false /: expressions) {
+        (res, exp) => res || compareNodesModuloVariableName(exp, expectedExp)
+      }
+      
+    	assertTrue(expressions.mkString("\n---\n")  + " do not contain (module variable names) " + expectedExp,
+  	    isFound)
+    }
   }
 
 }

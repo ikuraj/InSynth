@@ -14,7 +14,9 @@ object CommonDomainTypes {
 	val typeChar = Atom(Const("Char"))
 	val typeLong = Atom(Const("Long"))
 
+  // class A { ... }
 	val typeObjectA = Atom(Const("A"))
+  val objectA = typeObjectA
 
   val typeBottom = Atom(BottomType)
                 
@@ -42,7 +44,6 @@ object CommonDomainTypes {
 	}
 
   object BuildComplexTree {	  
-	  val objectA = typeObjectA
 	  // def m1(f: Int=>String, c:Char): Boolean
 	  val m1 = Function(
 	      List ( objectA, Function(typeInt, typeString), typeChar ), // parameters
@@ -62,6 +63,32 @@ object CommonDomainTypes {
 	  val queryType = Function(typeBoolean, typeBottom)
 
 	  val intToString = Function(typeInt, typeString)
+	}
+
+  object BuildMultipleVarTree {	  
+	  val m1 = Function( typeInt, typeString )
+
+	  val queryType = Function(typeInt, Function(typeInt, typeString))
+	}
+
+  object BuildTreeArrowTypeTree {	  
+    val intIntToChar = Function(List(typeInt, typeInt), typeChar)
+
+	  // def m1(): ((Int, Int)=>Char)
+	  val m1 = Function(
+      List(objectA), // parameters
+      intIntToChar // return type
+		)	
+	  // def m2(a: Int, b:Int): Char
+	  val m2 = Function(List(objectA, typeInt, typeInt), typeChar)
+	  // def m3(): Char
+	  val m3 = Function(List(objectA), typeChar)
+	  // query: String → ⊥
+	  val queryType = Function(intIntToChar, typeBottom)
+	  // def outside(a: Int, b:Int): Char
+	  val outside = intIntToChar
+	  // val intVal: Int
+	  val intVal = typeInt
 	}
     
 }

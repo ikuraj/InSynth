@@ -21,5 +21,7 @@ abstract class Declaration(val inSynthType: Type) {
   def getSimpleName: String
   
   def getDomainType: DomainType
+
+  def isAbstract: Boolean
   
 }

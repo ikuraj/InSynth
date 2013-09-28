@@ -92,7 +92,7 @@ class Transformer(streamBuilder: StreamFactory[Node])
   private def transform(node: SimpleNode, oldContext: Context,
     goalType: DomainType, visited: Set[env.Node]): Streamable[lambda.Node] = {
     // logging
-    entering(this.getClass().getName(), "transform", node.getDecls.head)
+    entering("transform", node.getDecls.head)
     
     // optimization, if the node has already been transformed
     if (nodeMap contains node) {
@@ -104,17 +104,99 @@ class Transformer(streamBuilder: StreamFactory[Node])
     // save old context
     var context = oldContext
 
+    // caching of already transformed parameter types
+    var _mapTypesToParameters: Map[SuccinctType, Streamable[lambda.Node]] = Map()
+    
+    // get a stremable for a given type (will be used as a parameter)
+    def mapTypesToParameters(parameterType: DomainType) = {
+      val parameterTypeInSynth = parameterType.toSuccinctType
+      if (_mapTypesToParameters contains parameterTypeInSynth)
+        _mapTypesToParameters(parameterTypeInSynth)
+      else {
+        val parameterStream = mapTypeToParameters(parameterType)
+        _mapTypesToParameters += (parameterTypeInSynth -> parameterStream)
+        parameterStream
+      }
+    }
+
+    def mapTypeToParameters(parameterType: DomainType) = {
+      val parameterTypeInSynth = parameterType.toSuccinctType
+      assert(node.getParams.contains(parameterTypeInSynth))
+			val containerNode = node.getParams(parameterTypeInSynth)
+      finer("parameterType=" + parameterType + ", parameterTypeInSynth=" + parameterTypeInSynth)
+			
+      // helper checking function
+      def scanNodesForParametersMap(nodesToCheck: Seq[env.Node]) = {
+        // get all possible terms from each node
+        (List[Streamable[Node]]() /: nodesToCheck) {
+          (list, nodeToCheck) =>
+            nodeToCheck match {
+              // if simple node (with the type that we need), recursively transform it                                            
+              case nprime: SimpleNode /*if nprime.getType == parameterTypeInSynth*/ =>
+                for (decl <- nprime.getDecls)
+                  assert(declarationHasAppropriateType(decl, parameterType),
+                    "declaration " + decl + " should have appropriate type " + parameterType)
+                // add recursively transformed node to set
+                transform(nprime, context, parameterType, 
+                    visited + nodeToCheck) :: list
+
+              // should not happen                        
+              // if leaf node search the context
+              //case AbsNode(`parameterTypeInSynth`) => set ++ getAllTermsFromContext(parameterType)
+              case _ => throw new RuntimeException("Cannot go down for type: " + parameterType +
+                " (InSynth: " + parameterTypeInSynth + ")" + " and the node is " + nodeToCheck + "(Container node: " + containerNode + ")")
+
+            }
+        }
+      }
+
+      // get node sets for both recursive and non-recursive edges
+      val (recursiveParams, nonRecursiveParams) =
+        containerNode.getNodes partition { visited contains _ }
+
+      // transform only non-recursive 
+      val nonRecursiveStreamableList = scanNodesForParametersMap(nonRecursiveParams.toSeq)
+
+      val paramsStream =
+        // check for recursive edges
+        if (!recursiveParams.isEmpty) {
+          fine("recursive nodes to check " + recursiveParams.mkString(", "))	
+          
+          // for each parameter set of nodes
+          val paramInitStream =
+            streamBuilder.makeLazyRoundRobbin(nonRecursiveStreamableList/*, "lazy params for " + parameterType*/)
+          
+          // add this node to the recursive mapping
+          if (recursiveParamsMap.contains((node, parameterType))) {
+            assert(recursiveParamsMap((node, parameterType))._2 == recursiveParams.toSet,
+              "recursive params map should be same cached")
+            assert(false)
+          }
+          else {
+            assert(recursiveParams.toSet.size == recursiveParams.size)
+            recursiveParamsMap += ((node, parameterType) ->
+            	(paramInitStream, recursiveParams.toSet))
+//	                  recursiveParamsMap += ((node, parameterType) ->
+//	                  	(paramInitStream, Set(recursiveParamLast)))
+          }
+          
+          paramInitStream
+        } else	                
+        	streamBuilder.makeRoundRobbin(nonRecursiveStreamableList/*, "params for " + parameterType + " " + variableGenerator.getFreshVariableName*/): Streamable[Node]
+        
+      paramsStream
+    }
+    
     /**
-     * returns an application node which generates the goal type according to the given
-     * function type (general domain type) - it applies parameters of fun to the functionNode argument
+     * returns a streamable of application nodes which generates the goal type according to the given
+     * function type - it applies parameters of fun to the functionNode argument
      * @param fun function type
      * @param functionNode the node which represents the function term
-     * @return application node
+     * @return stremable of application nodes
      */
-    def generateApplicationAccordingToFunction(fun: FunctionType,
-      functionNode: Node): Streamable[lambda.Node] = {
-
-      assert(functionNode match { case _: Identifier => true; case _ => false },
+    def generateApplicationAccordingToFunction(fun: FunctionType, functionNode: Node): Streamable[lambda.Node] = {
+      entering("generateApplicationAccordingToFunction", fun, functionNode)
+      assert(functionNode match { case _: Identifier | _: Variable => true; case _ => false },
         "functionNode should be an identifier, not" + functionNode)
 
       val goalReturnType = getReturnType(goalType)
@@ -123,189 +205,79 @@ class Transformer(streamBuilder: StreamFactory[Node])
         // fun directly returns the needed type just generate the application node
         // without recursive calls
         case FunctionType(params, `goalReturnType`) => {
-          fine("generating application for function with parameters: " +
-            (params map { _.toString }).mkString(","))
-
-          // get a set of nodes for each parameter type
-          val mapOfSetsOfParameterTypes = getMapTypesToParameters(params)
-          val paramsStreams: List[Streamable[Node]] =
-            params map {
-              (_: DomainType) match {
-                case st: DomainType => mapOfSetsOfParameterTypes(st)
-                case null => streamBuilder.makeSingletonList(List(NullLeaf)).asInstanceOf[Streamable[Node]]
-                //case _ => throw new RuntimeException
-              }
-            }
-
-          fine("paramsSetList: " + (paramsStreams) + " size=" + paramsStreams.size)
-
           // make streams of lists of parameter combinations
-          val paramListStream: Streamable[List[lambda.Node]] =
-            paramsStreams match {
-              case Nil => streamBuilder.makeSingletonList(Nil)
-              case List(stream) => streamBuilder.makeUnaryStreamList(stream, { el: lambda.Node => List(el) })
-              case stream1 :: stream2 :: rest =>
-                ((streamBuilder.makeBinaryStream(stream1, stream2/*, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName*/) { (el1, el2) => List(el1, el2) }: Streamable[List[lambda.Node]]) /: rest) {
-                  (resStream: Streamable[List[lambda.Node]], stream3: Streamable[lambda.Node]) =>
-                    streamBuilder.makeBinaryStream(resStream, stream3/*, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName*/) { (list, el2) => list :+ el2 }
-                }
-            }
-          
-          streamBuilder.makeUnaryStream(paramListStream, {
-            params: List[lambda.Node] => Application(fun, functionNode :: params)
-          }/*, functionNode.asInstanceOf[Identifier].decl.getSimpleName*/, Some(_ + 1))
-        }
-        // fun returns another function to which we need to apply arguments, include
-        // a recursive call
-        case FunctionType(params, innerFun: FunctionType) =>
-
-          assert(false, "functionNode should be identifier not" + functionNode)
-          fine("generating application for function with parameters: " +
-            (params map { _.toString }))
-
-          val mapOfSetsOfParameterTypes = getMapTypesToParameters(params)
-          val paramsStreams: List[Streamable[Node]] =
-            params map {
-              (_: DomainType) match {
-                case st: DomainType => mapOfSetsOfParameterTypes(st)
-                //case null => Set(NullLeaf).asInstanceOf[Set[IntermediateNode]]
-              }
-            }
-          fine("paramsSetList: " + (paramsStreams) + " size=" + paramsStreams.size)
-
-          // make streams of lists of parameter combinations
-          val paramListStream: Streamable[List[lambda.Node]] =
-            paramsStreams match {
-              case Nil => streamBuilder.makeSingletonList(Nil)
-              case List(stream) => streamBuilder.makeUnaryStreamList(stream, { el: lambda.Node => List(el) })
-              case stream1 :: stream2 :: rest =>
-                ((streamBuilder.makeBinaryStream(stream1, stream2/*, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName*/) { (el1, el2) => List(el1, el2) }: Streamable[List[lambda.Node]]) /: rest) {
-                  (resStream: Streamable[List[lambda.Node]], stream3: Streamable[lambda.Node]) =>
-                    streamBuilder.makeBinaryStream(resStream, stream3/*, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName*/) { (list, el2) => list :+ el2 }
-                }
-            }
+          val paramListStream = generateParameters(fun)
           
           // out of this make a stream that streams applications filled with parameters
           streamBuilder.makeUnaryStream(paramListStream, {
             params: List[lambda.Node] => Application(fun, functionNode :: params)
           }/*, functionNode.asInstanceOf[Identifier].decl.getSimpleName*/,  Some(_ + 1))
+        }
+        
+        // fun returns another function to which we need to apply arguments
+        case FunctionType(params, innerFun: FunctionType) => {
+          val paramListStream = generateParameters(fun)
+          
+          val innerApplicationStream = streamBuilder.makeUnaryStream(paramListStream, {
+            params: List[lambda.Node] => Application(fun, functionNode :: params)
+          },  Some(_ + 1))
+
+          generateApplicationAccordingToFunctions(
+            innerFun, innerApplicationStream
+          )
+        }
 
         // anything else is an error 
-        case _ => throw new RuntimeException
+        case _ => throw new RuntimeException("matched _ for: " + fun)
       }
     }
     
-    lazy val mapTypesToParameters = {      
-      // go through all available parameters and generate appropriate nodes	
-      (Map[DomainType, Streamable[Node]]() /:
-        node.getParams) {
-          (map, entry) =>
-            {
-              val parameterTypeInSynth = entry._1
-        			val containerNode = entry._2
+    /**
+     * generates application when multiple function nodes are possible
+     */
+    def generateApplicationAccordingToFunctions(fun: FunctionType, functionNodes: Streamable[lambda.Node]): Streamable[lambda.Node] = {
+      entering("generateApplicationAccordingToFunctions", fun, functionNodes)
 
-        			// XXX this ignores context and domain parameter type (we assume there is only one domain
-        			// parameter type that corresponds to parameterTypeInSynth
-        			val parameterType = {
-        			  val listOfCorrespondingDomainTypes =
-	        			  for (decl <- node.getDecls; tpe = decl.getDomainType;
-        			  		if (tpe.isInstanceOf[FunctionType]);
-        			  		parTpe <- tpe.asInstanceOf[FunctionType].args
-	      			  		if parTpe.toSuccinctType == parameterTypeInSynth)
-	        			    	yield parTpe
-    			    	assert(
-  			    	    listOfCorrespondingDomainTypes.size > 0,
-  			    	    "Domain types: " + node.getDecls.map(_.getDomainType).
-  			    	    	filter(_.isInstanceOf[FunctionType]).mkString("\n") +
-  			    	    "\nInSynth types: " + node.getParams.map(_._1).mkString("\n")
-			    	    )
-    			    	val setOfCorrespondingDomainTypes = listOfCorrespondingDomainTypes.toSet
-    			    	assert(setOfCorrespondingDomainTypes.size == 1,
-  			    	    "setOfCorrespondingDomainTypes.size == 1. " + setOfCorrespondingDomainTypes.mkString(", "))
-        			  setOfCorrespondingDomainTypes.head
-              }
-              finer("parameterType=" + parameterType + ", parameterTypeInSynth=" + parameterTypeInSynth)
-        			
-              // helper checking function
-              def scanNodesForParametersMap(nodesToCheck: Seq[env.Node]) = {
-                // get all possible terms from each node
-                (List[Streamable[Node]]() /: nodesToCheck) {
-                  (list, nodeToCheck) =>
-                    nodeToCheck match {
-                      // if simple node (with the type that we need), recursively transform it                                            
-                      case nprime: SimpleNode /*if nprime.getType == parameterTypeInSynth*/ =>
-                        for (decl <- nprime.getDecls)
-                          assert(declarationHasAppropriateType(decl, parameterType),
-                            "declaration " + decl + " should have appropriate type " + parameterType)
-                        // add recursively transformed node to set
-                        transform(nprime, context, parameterType, 
-                            visited + nodeToCheck) :: list
+      // make streams of lists of parameter combinations
+      val paramListStream = generateParameters(fun)
+      
+      streamBuilder.makeBinaryStream(functionNodes, paramListStream) {
+        (functionNode, params) => Application(fun, functionNode :: params)
+      }
+    }
 
-                      // should not happen                        
-                      // if leaf node search the context
-                      //case AbsNode(`parameterTypeInSynth`) => set ++ getAllTermsFromContext(parameterType)
-                      case _ => throw new RuntimeException("Cannot go down for type: " + parameterType +
-                        " (InSynth: " + parameterTypeInSynth + ")" + " and the node is " + nodeToCheck + "(Container node: " + containerNode + ")")
+    /*
+     * generates a streamable for list of parameters for application according to function type  
+     */
+    def generateParameters(fun: FunctionType) = {
+      entering("generateParameters", fun)
+      val FunctionType(params, goalType) = fun      
+      val goalReturnType = getReturnType(goalType)
+      
+      // get a set of nodes for each parameter type
+      val mapOfSetsOfParameterTypes = getMapTypesToParameters(params)
+      val paramsStreams: List[Streamable[Node]] =
+        params map {
+          (_: DomainType) match {
+            case st: DomainType => mapOfSetsOfParameterTypes(st)
+            //case null => streamBuilder.makeSingletonList(List(NullLeaf)).asInstanceOf[Streamable[Node]]                
+          }
+        }
+      fine("paramsSetList: " + (paramsStreams) + " size=" + paramsStreams.size)
 
-                    }
-                }
-              }
-
-              // get node sets for both recursive and non-recursive edges
-              val (recursiveParams, nonRecursiveParams) =
-                containerNode.getNodes partition { visited contains _ }
-
-              // transform only non-recursive 
-              val nonRecursiveStreamableList = scanNodesForParametersMap(nonRecursiveParams.toSeq)
-
-              val paramsStream =
-	              // check for recursive edges
-	              if (!recursiveParams.isEmpty) {
-	                // log
-	                fine("recursive nodes to check " + recursiveParams.mkString(", "))	
-	                
-//	                assert(visitedMap.contains(parameterType), "checking visited map for " + parameterType + " and map is" +
-//                    visitedMap + " and the current node decls " + node.getDecls.map(_.getSimpleName).mkString("\n"))
-//	                assert(!visitedMap(parameterType).isEmpty, "checking visited map for " + parameterType + " and map is" +
-//                    visitedMap)
-//	                for (recursiveParam <- recursiveParams)
-//	                	assert(visitedMap(parameterType).contains(recursiveParam), "visitedMap(parameterType).contains(recursiveParam)")
-//                	var recursiveParamLast = visitedMap(parameterType).last
-//                	var newList = visitedMap(parameterType).init
-//                	while (! (recursiveParams contains recursiveParamLast.asInstanceOf[env.SimpleNode])) {
-//              	    recursiveParamLast = newList.last
-//              	    newList = newList.init
-//                	}
-//	                println("last found " + recursiveParamLast.asInstanceOf[env.SimpleNode].getDecls.map(_.getSimpleName))
-//                	assert(recursiveParams contains recursiveParamLast.asInstanceOf[env.SimpleNode])	                
-	                
-		              // for each parameter set of nodes
-	                val paramInitStream =
-	                  streamBuilder.makeLazyRoundRobbin(nonRecursiveStreamableList/*, "lazy params for " + parameterType*/)
-	                
-	                // add this node to the recursive mapping
-	                if (recursiveParamsMap.contains((node, parameterType))) {
-	                  assert(recursiveParamsMap((node, parameterType))._2 == recursiveParams.toSet,
-                      "recursive params map should be same cached")
-                    assert(false)
-	                }
-	                else {
-	                  assert(recursiveParams.toSet.size == recursiveParams.size)
-	                  recursiveParamsMap += ((node, parameterType) ->
-	                  	(paramInitStream, recursiveParams.toSet))
-//	                  recursiveParamsMap += ((node, parameterType) ->
-//	                  	(paramInitStream, Set(recursiveParamLast)))
-	                }
-                  
-                  paramInitStream
-	              } else	                
-	              	streamBuilder.makeRoundRobbin(nonRecursiveStreamableList/*, "params for " + parameterType + " " + variableGenerator.getFreshVariableName*/): Streamable[Node]
-	              
-              assert(!map.contains(parameterType))
-              // return the update map with inner nodes added to the set of solutions
-              map + (parameterType -> paramsStream)
+      // make streams of lists of parameter combinations
+      val paramListStream: Streamable[List[lambda.Node]] =
+        paramsStreams match {
+          case Nil => streamBuilder.makeSingletonList(Nil)
+          case List(stream) => streamBuilder.makeUnaryStreamList(stream, { el: lambda.Node => List(el) })
+          case stream1 :: stream2 :: rest =>
+            ((streamBuilder.makeBinaryStreamToList(stream1, stream2/*, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName*/) { (el1, el2) => List(el1, el2) }: Streamable[List[lambda.Node]]) /: rest) {
+              (resStream: Streamable[List[lambda.Node]], stream3: Streamable[lambda.Node]) =>
+                streamBuilder.makeBinaryStreamToList(resStream, stream3/*, "pars for " + functionNode.asInstanceOf[Identifier].decl.getSimpleName*/) { (list, el2) => list :+ el2 }
             }
         }
+      
+      paramListStream
     }
 
     /**
@@ -353,19 +325,44 @@ class Transformer(streamBuilder: StreamFactory[Node])
             fine("getMatchingTypeFromDeclaration: checking decl: " + declaration)
             declaration match {
               // the declaration should have the needed type
-              case nd: Declaration if declarationHasAppropriateType(nd, goalType) => {                
-                // check the declaration scala type
-                val generatedApplication = nd.getDomainType match {
-
-                  // generate application terms according to this function 
-                  case sf: FunctionType =>
-                    fine("generating application for " + nd)
-                    generateApplicationAccordingToFunction(sf, Identifier(nd.getDomainType, nd))
-
-                  // no need for application, directly return the corresponding identifier
-                  case i =>
-                    streamBuilder.makeSingleton(Identifier(i, nd): Node)
-                }
+              case nd: Declaration if declarationHasAppropriateType(nd, goalType) => {           
+                // if abstract then get variables from the context
+                lazy val matchingVars = getAllTermsFromContext(context, nd.getDomainType)
+                fine("matchingVars=" + matchingVars)
+                fine("nd.isAbstract=%b, matchingVars.size > 1 =%b".format(nd.isAbstract, matchingVars.size > 1))
+                val generatedApplication = 
+	                if (nd.isAbstract && matchingVars.size > 1) {
+	                  val variablesStreamable = 
+	                    // TODO single stream instead of this - more efficient
+	                    streamBuilder.makeRoundRobbin(matchingVars.toSeq map
+                        { streamBuilder.makeSingleton(_) })
+	                  
+		                nd.getDomainType match {
+		                  // generate application terms according to this function 
+		                  case sf: FunctionType =>
+		                    fine("generating application for variable of function type" + sf)
+		                    generateApplicationAccordingToFunctions(sf, variablesStreamable)
+		                    
+		                  // no need for application, directly return the corresponding identifier
+		                  case i => variablesStreamable
+		                }
+	                } else {
+	                  val matchingNode =
+                  		if (nd.isAbstract) matchingVars.head
+                  		else // not abstract, get stream according to declaration type	                  
+                  			Identifier(nd.getDomainType, nd)
+                  		  
+		                nd.getDomainType match {
+		                  // generate application terms according to this function 
+		                  case sf: FunctionType =>
+		                    fine("generating application for " + nd)
+		                    generateApplicationAccordingToFunction(sf, matchingNode)
+		                    
+		                  // no need for application, directly return the corresponding identifier
+		                  case i =>
+		                    streamBuilder.makeSingleton(matchingNode)
+		                }
+	                }
 
                 // add generated application to the set
                 generatedApplication :: list

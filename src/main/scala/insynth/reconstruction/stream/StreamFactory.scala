@@ -16,7 +16,9 @@ trait StreamFactory[T] {
   
   def makeUnaryStreamList[X, Y <: T](streamable: Streamable[X], modify: X => List[Y]): Streamable[List[T]]
   
-  def makeBinaryStream[X, Y, Z <: T](s1: Streamable[X], s2: Streamable[Y])(combine: (X, Y) => List[Z]): Streamable[List[T]]
+  def makeBinaryStreamToList[X, Y, Z <: T](s1: Streamable[X], s2: Streamable[Y])(combine: (X, Y) => List[Z]): Streamable[List[T]]
+
+  def makeBinaryStream[X, Y <: T, Z <: T](s1: Streamable[X], s2: Streamable[List[Y]])(combine: (X, List[Y]) => Z): Streamable[T]
   
   def makeRoundRobbin[U <: T](streams: Seq[Streamable[U]]): Streamable[T]
   

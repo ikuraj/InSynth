@@ -17,24 +17,27 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
   override def isDepleted: Boolean =
     s1.isDepleted || s2.isDepleted
 
+  /** Return true if the index is already enumerated or the stream can enumerate more */
   override def nextReady(ind: Int): Boolean = {
     fine("nextReady ind " + ind + " enumeratedSize " + enumeratedSize)
-    assert(ind < enumeratedSize + 1, toString + " ind " + ind + " enumeratedSize " + enumeratedSize)
+//    assert(ind < enumeratedSize + 1, toString + " ind " + ind + " enumeratedSize " + enumeratedSize)
     val res = ind < enumeratedSize || hasNextFromIndexes
     // || getMinIterator(lastIndexCache) >= 0 //s1.nextReady && s2.nextReady
     fine("exiting nextReady ind " + ind + " ready " + res)
     res
   }
     
+  /** Keep track of enumerated indexes - indexes up to enumeratedSize are enumerated and available */
   var enumeratedSize = 0
-      
+  /** Keep track of progress for enumerations (we will have many of them since for each index, we can fix it
+   *  for left/right position and increase right/left */ 
   var iterators = ArrayBuffer[BufferedIterator[(U, Int)]]()
-  
+  /** In each enumeration step we can add new iterators - they are added only in the getMinIterator call */
   var iteratorsToBeAdded = MutableList[BufferedIterator[(U, Int)]]()
   
-  // isLeft?, index
+  /** Keep track of indexes which are incremented for each combination of (isLeft?, fixedIndex) */
   var indexesToCheck: MutableMap[(Boolean, Int), Int] = MutableMap.empty
-  // for checking when indexes are equal
+  /** for checking when indexes are equal */
   var indexesToCheckSet: MutableSet[Int] = MutableSet(0)
   
   def hasNextFromIndexes = {
@@ -67,7 +70,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
     indexesToCheck += ((isLeft, ind) -> (ind + 1))
     if (isLeft) {
       indexesToCheckSet += (ind + 1)
-    } 
+    }
     iteratorsToBeAdded :+= it
   }
   
@@ -139,17 +142,21 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 		      // set the flag
 		      produced = true
 		      
-	        rightIterator.next
+	        rightIterator.next	        
+	        enumeratedSize += 1
 	        assert(indexesToCheck.contains((true, ind1)), "could not find " +
 	        		(true, ind1) + " in indexesToCheck=" + indexesToCheck)
+		      fine("incrementing (true, ind1)" + (true, ind1))
 		      indexesToCheck.update((true, ind1), indexesToCheck(true, ind1) + 1)
 	        
 	        (combine(leftStreamPart(1), s2.getStream(startingInd2)), nextLeftSizeCombined) #::
 	        (combine(leftElem, nextRightElem), nextSize) #:: loop(ind2 + 1)
 	      } else {
-	        rightIterator.next
+	        rightIterator.next	        
+	        enumeratedSize += 1
 	        assert(indexesToCheck.contains((true, ind1)), "could not find " +
 	        		(true, ind1) + " in indexesToCheck=" + indexesToCheck)
+		      fine("incrementing (true, ind1)" + (true, ind1))
 		      indexesToCheck.update((true, ind1), indexesToCheck(true, ind1) + 1)
 	        (combine(leftElem, nextRightElem), nextSize) #:: loop(ind2 + 1)
 	      }
@@ -165,7 +172,8 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
         }
 	      
 	      // return "equal" combination
-        indexesToCheckSet -= startingInd2
+        indexesToCheckSet -= startingInd2       
+        enumeratedSize += 1
 	      Stream(
 	        (combine(leftStreamPart(1), s2.getStream(startingInd2)),
 	        nextLeftSizeCombined)
@@ -261,8 +269,10 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	      }
 
         leftIterator.next	        
+      	enumeratedSize += 1
 	        assert(indexesToCheck.contains(false, ind2), "could not find " +
 	        		(false, ind2) + " in indexesToCheck=" + indexesToCheck)
+		      fine("incrementing (false, ind2)" + (false, ind2))
 		      indexesToCheck.update((false, ind2), indexesToCheck(false, ind2) + 1)
         (combine(nextLeftElem, rightElem), nextSize) #:: loop(ind1 + 1)	      
       } 
@@ -323,7 +333,8 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
       if (minInd >= 0) {
       	val res = iterators(minInd).next #:: loop(minInd + 1)
 //  			lastIndexCache = minInd + 1
-      	enumeratedSize += 1
+      	//instead of increasing here, increase when each iterator advances
+      	//enumeratedSize += 1
       	res
 //        {
 //        	if (iteratorsToBeAdded.size > 0)
