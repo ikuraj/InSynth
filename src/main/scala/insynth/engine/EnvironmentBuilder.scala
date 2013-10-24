@@ -1,7 +1,7 @@
 package insynth.engine
 
 import insynth.structures.{ SuccinctType => Type, TSet }
-import insynth.load.Declaration
+import insynth.load._
 import insynth.engine.scheduler.Scheduler
 
 abstract class EnvironmentBuilder {
@@ -82,8 +82,7 @@ class DeltaEnvironmentBuilder(parent: Environment) extends EnvironmentBuilder wi
   
   def create(set: TSet) {
     set.content.foreach{
-      tpe => //this.addDeclaration(DeclarationFactory.makeAbstractDeclaration(tpe))
-      	throw new RuntimeException("Fix this")
+      tpe => this.addDeclaration(new AbstractDeclaration(tpe))
     }
   }
   

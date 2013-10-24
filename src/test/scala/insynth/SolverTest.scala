@@ -1,8 +1,10 @@
-package insynth.util.streams.ordered
+package insynth
 
 import insynth._
 import insynth.testdomain._
 import insynth.common._
+
+import insynth.util.format.FormatSuccinctNode
 
 import org.scalatest._
 import org.scalatest.matchers._
@@ -111,21 +113,56 @@ class SolverTest extends FunSpec with GivenWhenThen with ShouldMatchers {
       result should be (null)
     }
 
-    ignore("Fix this ASAP!") { 
-    it("should compute valid a proof tree if function has to be created") {
+//    ignore("Fix this ASAP!") { 
+    it("should not compute a valid proof tree if function cannot be created") {
       val inputDeclarations = List(booleanDeclaration, unitDeclaration,
         functionFunsToFunDeclaration)
       val queryBuilder = TestQueryBuilder(typeInt)
       
-      Given("a solver with 0 timeout")
+      Given("a solver")
       val solver = new Solver(
         inputDeclarations, queryBuilder
     	)
       
       Then("returned proof tree should be empty")
       val result = solver.getProofTree
+      result should be (null)
+    }
+    
+    it("should compute a valid proof tree if function has to be created") {
+      val inputDeclarations = List(booleanDeclaration, unitDeclaration,
+        intDeclaration, functionFunsToFunDeclaration)
+      val queryBuilder = TestQueryBuilder(typeInt)
+      
+      Given("a solver")
+      val solver = new Solver(
+        inputDeclarations, queryBuilder
+    	)
+      
+      Then("returned proof tree should not be empty")
+      val result = solver.getProofTree
       result should not be (null)
       result.getNodes should not be ('empty)
+      
+      And("returned proof tree should contain ff({Boolean => i}, f2(u, i))(i)")
+      withClue(
+		    breadthFirstSearchPrint(result.getNodes.head)
+	    ) {
+      checkInhabitants(result,
+        StringNode(functionFunsToFunDeclaration.getSimpleName, Set(
+          StringNode(intDeclaration.getSimpleName),
+          StringNode(booleanDeclaration.getSimpleName)
+        ))) should be (true)
+      }
+
+      withClue(
+		    breadthFirstSearchPrint(result.getNodes.head)
+	    ) {
+      checkInhabitants(result,
+        StringNode(functionFunsToFunDeclaration.getSimpleName, Set(
+          StringNode(unitDeclaration.getSimpleName)
+        ))) should not be (true)
+      }
     }
  
     it("should compute valid a proof tree if function has function parameters") {
@@ -155,8 +192,6 @@ class SolverTest extends FunSpec with GivenWhenThen with ShouldMatchers {
         ))) should be (true)
       }
     }
-    }
-    
   }
   
 }
