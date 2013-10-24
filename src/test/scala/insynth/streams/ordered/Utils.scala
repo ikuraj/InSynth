@@ -8,6 +8,12 @@ object Utils {
   
   def getSingleStream(streamToUse: => Stream[Int], flag: Boolean): SingleStream[Int] =
     TestSingleStream(streamToUse zip streamToUse, flag)
+
+  def getSingleStream[T](streamToUse: => Stream[(T, Int)], size: Int)(implicit s:DummyImplicit): SingleStream[T] =
+    TestSingleStreamFixedSize(streamToUse map { _._1 }, streamToUse map { _._2 }, size)
+  
+  def getSingleStream[T](elements: => Stream[Int], values: => Stream[Int], size: Int): SingleStream[Int] =
+    TestSingleStreamFixedSize(elements, values, size)
   
   def getSingleStream(list: List[Int]): SingleStream[Int] =
   	getSingleStream(list.sortWith(_<_).toStream, false)

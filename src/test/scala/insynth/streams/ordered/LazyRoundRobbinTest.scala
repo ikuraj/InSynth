@@ -30,26 +30,44 @@ class LazyRoundRobbinTest extends JUnitSuite {
   }
 
   @Test
-  @Ignore("lazy stream at this point needs to evaluate all needed values to compare")
+//  @Ignore("lazy stream at this point needs to evaluate all needed values to compare")
   def testRoundRobinLoopEvaluationNoThrow {
-//    val lazyPair = ((throw new RuntimeException), 2)
-//    
-//    val innerStream = (1, 1) #:: lazyPair #:: Stream[(Int, Int)]()
-    
-    val stream1 = getSingleStream(0)
-    val stream2 = RoundRobbin(Seq(Singleton[Int](throw new RuntimeException)))
-    
-    val lrr = LazyRoundRobbin(List(stream1))
-
-    lrr addStreamable UnaryStream(lrr, (x: Int) => x + 1 )
-
-    lrr.initialize
-
-    val stream = lrr.getStream
-
-    val rndValue = rnd.nextInt(1000)
-//
-//    assertEquals(List.fill(rndValue)(1), stream.take(rndValue))
+    {
+	    lazy val lazyPair = ((throw new RuntimeException), 2)
+	    
+	    val innerStream = (1, 1) #:: lazyPair #:: Stream[(Int, Int)]()
+	    
+	    val stream1 = getSingleStream(innerStream, 2)
+	    
+	    val lrr = LazyRoundRobbin(List(stream1))
+	
+	    lrr.initialize
+	
+	    val stream = lrr.getStream
+	
+	    assertEquals("Lazy streamable should enumerate first item with touching rest of the stream only values.",
+        List(1), stream.take(1))
+    }
+    {
+	    lazy val elementStream = 1 #:: (throw new RuntimeException) #:: Stream[Int]()
+	    lazy val valueStream = 1 #:: 3 #:: Stream[Int]()
+	    
+	    // pairs are not lazy
+//	    val innerStream = elementStream zip valueStream
+	    
+	    val stream1 = getSingleStream(elementStream, valueStream, 2)
+	    
+	    val lrr = LazyRoundRobbin(List(stream1))
+	
+	    lrr addStreamable UnaryStream(lrr, (x: Int) => x + 1 )
+	
+	    lrr.initialize
+	
+	    val stream = lrr.getStream
+	
+	    assertEquals("Lazy streamable should enumerate first two items with touching rest of the stream only values.",
+        List(1, 2), stream.take(2))
+    }
   }
 
   @Test(expected = classOf[RuntimeException])

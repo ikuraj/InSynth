@@ -28,3 +28,25 @@ protected object TestSingleStream {
   def apply[T](stream: => Stream[(T, Int)], isInfiniteFlag: Boolean = false) =
     new TestSingleStream(stream, isInfiniteFlag)
 }
+
+class TestSingleStreamFixedSize[T](stream: => Stream[T], values: => Stream[Int], size: Int)
+	extends SingleStream[T](stream, values, false) {
+        
+  override def isInfinite = false
+  
+  override def isDepleted: Boolean =
+    false
+      
+  override def nextReady(ind: Int): Boolean =
+    ind < size
+  
+  override def getStream = stream
+  
+  override def getValues = values
+    
+}
+
+protected object TestSingleStreamFixedSize {
+  def apply[T](stream: => Stream[T], values: => Stream[Int], size: Int) =
+    new TestSingleStreamFixedSize(stream, values, size)
+}
