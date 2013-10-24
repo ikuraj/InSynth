@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN">
+	<appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+		</Console>
+		<File name="ProofTreeFile" fileName="logs/proofTree.log">
+			<PatternLayout
+				pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+			<ThresholdFilter level="debug" onMatch="DENY"
+				onMismatch="ACCEPT" />
+		</File>
+		<File name="StreamerLog" fileName="logs/streamer.log" append="false">
+			<PatternLayout
+				pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+			<ThresholdFilter level="debug" onMatch="DENY"
+				onMismatch="ACCEPT" />
+		</File>
+		<File name="SeparateRoundRobbinLog" fileName="logs/roundrobbin.log"
+			append="false">
+			<PatternLayout
+				pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+		</File>
+	</appenders>
+	<loggers>
+		<logger name="insynth.reconstruction.Streamer$" level="off"
+			additivity="false">
+			<appender-ref ref="Console" />
+			<appender-ref ref="StreamerLog" />
+		</logger>
+		<logger name="insynth.Solver" level="trace" additivity="false">
+			<appender-ref ref="ProofTreeFile" />
+		</logger>
+		<logger name="insynth.streams.ordered.BinaryStream" level="off"
+			additivity="false">
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="insynth.streams.ordered.RoundRobbin" level="off"
+			additivity="false">
+			<appender-ref ref="SeparateRoundRobbinLog" />
+		</logger>
+		<logger name="insynth.reconstruction.stream.Transformer" level="off"
+			additivity="false">
+			<appender-ref ref="Console" />
+		</logger>
+		<root level="error">
+			<appender-ref ref="Console" />
+		</root>
+	</loggers>
+</configuration>

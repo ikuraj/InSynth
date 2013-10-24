@@ -30,3 +30,6 @@ libraryDependencies ++= Seq(
 seq(ScctPlugin.instrumentSettings : _*)
 
 seq(com.github.theon.coveralls.CoverallsPlugin.coverallsSettings: _*)
+
+// default setting excludes packaging main logging config file
+packageMainLogConfig := false
