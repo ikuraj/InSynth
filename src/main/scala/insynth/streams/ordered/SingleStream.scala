@@ -4,7 +4,7 @@ import insynth.streams._
 import insynth.streams.unordered.{ SingleStream => UnSingleStream }
 
 // NOTE this would require ordered stream
-protected class SingleStream[T](stream: => Stream[(T, Int)], isInfiniteFlag: Boolean)
+class SingleStream[T](stream: => Stream[(T, Int)], isInfiniteFlag: Boolean)
 	extends OrderedStreamable[T] {
   
   override def isInfinite = isInfiniteFlag
@@ -18,7 +18,7 @@ protected class SingleStream[T](stream: => Stream[(T, Int)], isInfiniteFlag: Boo
     
 }
 
-protected object SingleStream {
+object SingleStream {
   def apply[T](stream: => Stream[(T, Int)], isInfiniteFlag: Boolean = false) =
     new SingleStream(stream, isInfiniteFlag)
 }

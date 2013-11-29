@@ -11,8 +11,8 @@ class UnorderedStreamFactory[T] extends StreamFactory[T] {
   
   override def makeSingletonList[U <: T](element: List[U]) = Singleton(element)
   
-//  override def makeSingleStream[U <: T](stream: => Stream[U], isInfiniteFlag: Boolean) =
-//    SingleStream(stream, isInfiniteFlag)
+  override def makeSingleStream[U <: T](stream: => Stream[U], isInfiniteFlag: Boolean) =
+    SingleStream(stream, isInfiniteFlag)
   
   override def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X=>Y, modifyVal: Option[Int => Int] = None) =
     UnaryStream(streamable, modify)
