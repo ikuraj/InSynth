@@ -23,7 +23,7 @@ trait Streamables[T] {
     
     val visited : StreamEl => Set[StreamEl]
     
-//    val cachedStreams: StreamEl => Map[StreamEl, Streamable[T]]
+    val cachedStreams: StreamEl => Map[StreamEl, Streamable[T]]
     
 //    val recursiveParamsMap : StreamEl => Map[StreamEl, (LazyStreamable, Set[T])]
     
@@ -37,10 +37,11 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
   def getStreamPairs(streamEl: StreamEl,
     process: PartialFunction[(Class[_], T), T],
     combiner: PartialFunction[(Class[_], List[T]), T],
-    injections: Map[Class[_], (Stream[T], Boolean)]
+    injections: Map[Class[_], (Stream[T], Boolean)],
+    streamSpecificInjections: Map[StreamEl, (Stream[T], Boolean)] = Map()
   ) = {
     
-    getStreamable(streamEl, process, combiner, injections) match {
+    getStreamable(streamEl, process, combiner, injections, streamSpecificInjections) match {
       case os: OrderedStreamable[_] =>
         fine("returning ordered streamable")
         os.getStream zip os.getValues.map(_.toFloat)
@@ -54,15 +55,17 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
   def getStream(streamEl: StreamEl,
     process: PartialFunction[(Class[_], T), T],
     combiner: PartialFunction[(Class[_], List[T]), T],
-    injections: Map[Class[_], (Stream[T], Boolean)]
+    injections: Map[Class[_], (Stream[T], Boolean)],
+    streamSpecificInjections: Map[StreamEl, (Stream[T], Boolean)] = Map()
   ) = {
-    getStreamable(streamEl, process, combiner, injections).getStream
+    getStreamable(streamEl, process, combiner, injections, streamSpecificInjections).getStream
   }  
   
   def getStreamable(streamEl: StreamEl,
     process: PartialFunction[(Class[_], T), T],
     combiner: PartialFunction[(Class[_], List[T]), T],
-    injections: Map[Class[_], (Stream[T], Boolean)]
+    injections: Map[Class[_], (Stream[T], Boolean)],
+    streamSpecificInjections: Map[StreamEl, (Stream[T], Boolean)]
   ) = {
     Attribution.initTree(streamEl)
           
@@ -70,6 +73,7 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
     this.combiner = combiner
     this.process = process
     this.injections = injections
+    this.specificInjections = streamSpecificInjections
     
     val transformed = stream(streamEl)
     
@@ -83,30 +87,58 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
   val stream : StreamEl => Streamable[T] =
     dynAttr {
       case Single(c, inner) =>
-        val modify: T => T = (t: T) =>
+        // TODO optimize this!, dont do unary stream if not necessary
+        val modify: T => T = (t: T) => 
           if (process.isDefinedAt((c, t)))
             process(c, t)
           else
             t
         
         makeUnaryStream( inner->stream, modify ) 
-      case Injecter(c) =>
-        val (innerStream, isInfinite) = injections(c)
+
+      case i: Injecter =>
+        val (innerStream, isInfinite) = 
+          specificInjections.getOrElse(i, injections(i.c))
         
+        fine("isInfinite " + isInfinite + " for " + i)
+          
         if (isInfinite) makeSingleStream( innerStream )
         else makeFiniteStream( innerStream.toVector )
-//        case a@Alternater(c, inner) => 
-//          // get node sets for both recursive and non-recursive edges
-//          val (recursiveParams, nonRecursiveParams) =
-//            inner partition { a->visited contains _ }
-//          
-//          // transform only non-recursive 
-//          val nonRecursiveStreamableList =
-//            nonRecursiveParams map { _->stream }
-//
-//          makeRoundRobbin(nonRecursiveStreamableList)
+
+      case a@Alternater(c, inner) => 
+        // get node sets for both recursive and non-recursive edges
+        val (recursiveParams, nonRecursiveParams) =
+          inner partition { a->visited contains _ }
+        
+        // transform only non-recursive 
+        val nonRecursiveStreamableList =
+          nonRecursiveParams map { _->stream }
+
+        // if there are recursive links we need to construct lazy stream
+        val thisStream =
+          if (recursiveParams.isEmpty)
+            makeRoundRobbin(nonRecursiveStreamableList)
+          else {
+            val paramInitStream = makeLazyRoundRobbin(nonRecursiveStreamableList.toList)
+            
+            val kv: (StreamEl, (LazyStreamable, List[StreamEl])) =
+              (a, (paramInitStream, recursiveParams.toList))
+              
+            recursiveParamsMap += kv
+            
+            paramInitStream
+          }
+        
+        // TODO optimize this!, dont do unary stream if not necessary
+        val modify: T => T = (t: T) =>
+          if (process.isDefinedAt((c, t)))
+            process(c, t)
+          else
+            t
+            
+        makeUnaryStream( thisStream, modify ) 
+
       case Combiner(c, inner) =>          
-                  
         // make streams of lists of parameter combinations
         val paramListStream = inner->listStream
         
@@ -114,14 +146,19 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
           (list: List[T]) => combiner(c, list)
           , Some(_ + 1))
         
-      case Empty => makeEmptyStreamable
+      case Empty =>
+        makeEmptyStreamable
     }
   
-//    val cachedStreams: StreamEl => Map[StreamEl, Streamable[T]] =
-//      attr {
-//        case t if t isRoot => Map( (t, (t->stream)) )
-//        case t             => Set(t) | t.parent[StreamEl]->visited
-//      }
+    val cachedStreams: StreamEl => Map[StreamEl, Streamable[T]] =
+      attr {
+        case t if t isRoot => Map( (t, (t->stream)) )
+        case t             => {
+          val kv = (t, (t->stream)): (StreamEl, Streamable[T])
+
+          t.parent[StreamEl]->cachedStreams + kv
+        }
+      }
   
   val visited : StreamEl => Set[StreamEl] =
     attr {
@@ -168,15 +205,16 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
     }
       
   var recursiveParamsMap: MutableMap[StreamEl, (LazyStreamable, List[StreamEl])] = _
-  var nodeMap: MutableMap[StreamEl, Streamable[T]] = _
+//  var nodeMap: MutableMap[StreamEl, Streamable[T]] = _
   
   var combiner: PartialFunction[(Class[_], List[T]), T] = _
   var process: PartialFunction[(Class[_], T), T] = _
   var injections: Map[Class[_], (Stream[T], Boolean)] = _
+  var specificInjections: Map[StreamEl, (Stream[T], Boolean)] = _
     
   // initialize data for each traversal
   def initialize = {
-    nodeMap = MutableMap.empty
+//    nodeMap = MutableMap.empty
     recursiveParamsMap = MutableMap.empty
   }
   
