@@ -4,12 +4,15 @@ import insynth.streams._
 import insynth.streams.unordered.{ SingleStream => UnSingleStream }
 
 // NOTE this would require ordered stream
-class SingleStream[T](stream: => Stream[(T, Int)])
+class FiniteStream[T](arr: => Vector[(T, Int)])
 	extends OrderedStreamable[T] {
   
-  override def isInfinite = true
+  var nextInd = 0
+  val stream = Stream.fill( arr.size )( { nextInd+=1; arr(nextInd-1) } )
   
-  override def isDepleted: Boolean = false // wtv
+  override def isInfinite = false
+  
+  override def isDepleted: Boolean = nextInd < arr.size // wtv
   override def nextReady(ind: Int): Boolean = true
   
   override def getStream = stream map { _._1 }
@@ -18,7 +21,7 @@ class SingleStream[T](stream: => Stream[(T, Int)])
     
 }
 
-object SingleStream {
-  def apply[T](stream: => Stream[(T, Int)]) =
-    new SingleStream(stream)
+object FiniteStream {
+  def apply[T](stream: => Vector[(T, Int)]) =
+    new FiniteStream(stream)
 }

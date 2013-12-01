@@ -23,84 +23,151 @@ class StreamablesTest extends FunSuite {
   
   val streamFactory = new OrderedStreamFactory[Any]
   
-  test("simpleConstruction") {
+//  test("simpleConstruction") {
+//    
+//    case class Program(classes: Class)
+//    case class Class(methods: Method)
+//    case class Method()
+//    
+//    val methodNode = Empty
+//    val classNode = Single(classOf[Class], methodNode)
+//    val programNode = Single(classOf[Program], classNode)
+//    
+//    val streamables = new StreamablesIml(streamFactory)
+//    
+//    val resultStream = streamables.getStreamable(
+//      programNode,
+//      {
+//        case (clazz, c: Class) if clazz == classOf[Program] => Program(c)
+//        case (clazz, m: Method) if clazz == classOf[Class] => Class(m)
+//      },
+//      null,
+//      null
+//    )
+//
+//    resultStream match {
+//      case us: ord.UnaryStream[_, _] =>
+//        us.streamable match {
+//          case us: ord.UnaryStream[_, _] =>
+//            us.streamable match {
+//              case ord.Empty =>                
+//              case _ => fail          
+//            }            
+//          case _ => fail          
+//        }
+//      case _ => fail
+//    }
+//      
+//  }
+//
+//  test("injecter stream simple test") {
+//    
+//    case class Program(classes: Class)
+//    case class Class(methods: Method)
+//    case class Method(m: Int)
+//    
+//    val methodNode = Injecter(classOf[Method])
+//    val classNode = Single(classOf[Class], methodNode)
+//    val programNode = Single(classOf[Program], classNode)
+//    
+//    val streamables = new StreamablesIml(streamFactory)
+//    
+//    val methodStream = Stream( Method(1), Method(2), Method(3) )
+//    
+//    val resultStream = streamables.getStreamable(
+//      programNode,
+//      {
+//        case (clazz, c: Class) if clazz == classOf[Program] => Program(c)
+//        case (clazz, m: Method) if clazz == classOf[Class] => Class(m)
+//      },
+//      null,
+//      Map( classOf[Method] -> ( methodStream, false ) )
+//    )
+//
+//    resultStream match {
+//      case us: ord.UnaryStream[_, _] =>
+//        us.streamable match {
+//          case us: ord.UnaryStream[_, _] =>
+//            us.streamable match {
+//              case ss: ord.FiniteStream[_] => 
+//                assert( ss.getStream.toList == methodStream.toList) 
+//              case _ => fail          
+//            }            
+//          case _ => fail          
+//        }
+//      case _ => fail
+//    }
+//    
+//    expectResult( methodStream.map(m => Program(Class(m))) ) {
+//      resultStream.getStream
+//    }    
+//      
+//  }
+  
+  test("aggregator stream simple test") {
     
     case class Program(classes: Class)
-    case class Class(methods: Method)
-    case class Method()
-    
-    val methodNode = Empty
-    val classNode = Single(classOf[Class], methodNode)
-    val programNode = Single(classOf[Program], classNode)
-    
-    val streamables = new StreamablesIml(streamFactory)
-    
-    val resultStream = streamables.getStream(
-      programNode,
-      {
-        case (clazz, c: Class) if clazz == classOf[Program] => Program(c)
-        case (clazz, m: Method) if clazz == classOf[Class] => Class(m)
-      },
-      null,
-      null
-    )
-
-    resultStream match {
-      case us: ord.UnaryStream[_, _] =>
-        us.streamable match {
-          case us: ord.UnaryStream[_, _] =>
-            us.streamable match {
-              case ord.Empty =>                
-              case _ => fail          
-            }            
-          case _ => fail          
-        }
-      case _ => fail
-    }
-      
-  }
-
-  test("injecter stream simple test") {
-    
-    case class Program(classes: Class)
-    case class Class(methods: Method)
+    case class Class(methods: Seq[Method])
     case class Method(m: Int)
     
     val methodNode = Injecter(classOf[Method])
-    val classNode = Single(classOf[Class], methodNode)
+    val aggregatedMethodNode = Generator(classOf[Method], methodNode)
+    val classNode = Combiner(classOf[Class], aggregatedMethodNode)
     val programNode = Single(classOf[Program], classNode)
     
     val streamables = new StreamablesIml(streamFactory)
     
     val methodStream = Stream( Method(1), Method(2), Method(3) )
     
-    val resultStream = streamables.getStream(
+    val resultStream = streamables.getStreamPairs(
       programNode,
       {
-        case (clazz, c: Class) if clazz == classOf[Program] => Program(c)
-        case (clazz, m: Method) if clazz == classOf[Class] => Class(m)
+        case (clazz, m: Class) if clazz == classOf[Program] => Program(m)
       },
-      null,
+      {
+        case (clazz, methodList: List[_]) if clazz == classOf[Class] =>
+          Class(methodList.asInstanceOf[List[Method]])
+      },
       Map( classOf[Method] -> ( methodStream, false ) )
     )
 
-    resultStream match {
-      case us: ord.UnaryStream[_, _] =>
-        us.streamable match {
-          case us: ord.UnaryStream[_, _] =>
-            us.streamable match {
-              case ss: ord.SingleStream[_] => 
-                assert( ss.getStream.toList == methodStream.toList) 
-              case _ => fail          
-            }            
-          case _ => fail          
-        }
-      case _ => fail
-    }
+//    withClue(FormatStreamUtils(resultStream).toString) {
+//      resultStream match {
+//        case us: ord.UnaryStream[_, _] =>
+//          us.streamable match {
+//            case us: ord.LazyRoundRobbin[_] =>
+//              us.streams match {
+//                case (singleton: ord.Singleton[_]) ::
+//                  (bs: ord.BinaryStream[_, _, _]) :: Nil => 
+//                case _ => fail          
+//              }            
+//            case _ => fail          
+//          }
+//        case _ => fail
+//      }
+//    }
     
-    expectResult( methodStream.map(m => Program(Class(m))) ) {
-      resultStream.getStream
+    val expected =
+      List((Nil, 1.0), (List(Method(1)), 2.0), (List(Method(2)), 3.0), (List(Method(3)), 4.0),
+        (List(Method(1), Method(1)), 3.0), (List(Method(1), Method(2)), 4.0)) map {
+        case (list, w) => (Program(Class(list)), w + 1)
+      }
+        
+    withClue ( resultStream.take(25).mkString("\n") ) {
+      for(ex <- expected)
+        assert( resultStream.take(25).toSet contains ex, "does not contain " + ex )
     }    
+    
+//    withClue (resultStream.getStream.take(5).mkString(",")) {
+//      expectResult(
+//        List(Nil, List(Method(1)), List(Method(2)), List(Method(3)), List(Method(3)),
+//          List(Method(1), Method(1)), List(Method(1), Method(2)), List(Method(1), Method(3)),
+//          List(Method(2), Method(1)), List(Method(2), Method(2)), List(Method(2), Method(3)),
+//          List(Method(3), Method(1)), List(Method(3), Method(2)), List(Method(3), Method(3))
+//      )) {
+//        resultStream.getStream.take(5)
+//      }
+//    }    
       
   }
   
@@ -117,18 +184,3 @@ class StreamablesTest extends FunSuite {
 //  }
 
 }
-
-//object ReconstructorTest {
-//  
-//  var useEnumerationOrdering: Boolean = _
-//  
-//  @BeforeClass
-//  def saveFlag = {
-//    useEnumerationOrdering = Config.useEnumerationOrdering
-//    Config.useEnumerationOrdering = false
-//  }
-//  
-//  @AfterClass
-//  def restoreFlag = Config.useEnumerationOrdering = useEnumerationOrdering
-//  
-//}

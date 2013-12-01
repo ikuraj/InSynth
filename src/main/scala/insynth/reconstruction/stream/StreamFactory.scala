@@ -10,7 +10,9 @@ trait StreamFactory[T] {
   
   def makeSingletonList[U <: T](element: List[U]): Streamable[List[T]]
   
-  def makeSingleStream[U <: T](stream: => Stream[U], isInfiniteFlag: Boolean): Streamable[T]
+  def makeSingleStream[U <: T](stream: => Stream[U]): Streamable[T]
+
+  def makeFiniteStream[U <: T](array: => Vector[U]): Streamable[T]
   
   def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X => Y, modifyVal: Option[Int => Int] = None): Streamable[T]
   
@@ -22,7 +24,7 @@ trait StreamFactory[T] {
   
   def makeLazyRoundRobbin[U <: T](initStreams: List[Streamable[U]]): Streamable[T] with AddStreamable[T]
 
-//  def makeLazyRoundRobbinList[U <: T](initStreams: List[Streamable[List[U]]]): Streamable[List[T]] with AddStreamable[T]
+  def makeLazyRoundRobbinList[U <: T](initStreams: List[Streamable[List[U]]]): Streamable[List[T]] with AddStreamable[List[T]]
   
   def getFinalStream(streamable: Streamable[T]): Stream[(T, Float)]
   

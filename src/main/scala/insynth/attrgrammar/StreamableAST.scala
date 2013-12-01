@@ -25,7 +25,8 @@ object StreamableAST {
     // generates a list of elements from a single stream
     // NOTE this cannot be expressed in the typing system (something like a function with infinite number of
     // parameters of the same type)
-    case class Aggregator(c: Class[_], inner: StreamEl) extends ListStreamEl
+    case class Aggregator(c: Class[_], inner: Seq[StreamEl]) extends ListStreamEl
+    case class Generator(c: Class[_], inner: StreamEl) extends ListStreamEl
     // will not produce an empty list
 //    case class AggregatorNoEmpty(c: Class[_], inner: StreamEl) extends ListStreamEl
 
