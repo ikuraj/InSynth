@@ -4,7 +4,9 @@ package attrgrammar
 import scala.collection.mutable.{ Map => MutableMap }
 
 import org.kiama.attribution.Attribution
+import org.kiama.attribution.Attributable
 import org.kiama.attribution.Attribution._
+import org.kiama.attribution.Decorators._
 
 import streams._
 import reconstruction.stream._
@@ -65,7 +67,8 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
     process: PartialFunction[(Class[_], T), T],
     combiner: PartialFunction[(Class[_], List[T]), T],
     injections: Map[Class[_], (Stream[T], Boolean)],
-    streamSpecificInjections: Map[StreamEl, (Stream[T], Boolean)]
+    streamSpecificInjections: Map[StreamEl, (Stream[T], Boolean)] = Map(),
+    filters: Map[Filter, T => Boolean] = Map()
   ) = {
     Attribution.initTree(streamEl)
           
@@ -74,6 +77,7 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
     this.process = process
     this.injections = injections
     this.specificInjections = streamSpecificInjections
+    this.filters = filters
     
     val transformed = stream(streamEl)
     
@@ -104,11 +108,18 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
           
         if (isInfinite) makeSingleStream( innerStream )
         else makeFiniteStream( innerStream.toVector )
+        
+      case f: Filter =>
+        
 
       case a@Alternater(c, inner) => 
         // get node sets for both recursive and non-recursive edges
         val (recursiveParams, nonRecursiveParams) =
-          inner partition { a->visited contains _ }
+//          inner partition { a->visited contains _ }
+          (a.getRecursiveLinks, inner)
+
+        info("recursiveParams.size=" + recursiveParams.size +
+          "nonRecursiveParams.size=" + nonRecursiveParams.size)
         
         // transform only non-recursive 
         val nonRecursiveStreamableList =
@@ -160,15 +171,15 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
         }
       }
   
-  val visited : StreamEl => Set[StreamEl] =
-    attr {
-        case t if t isRoot => Set(t)
-        case t             => Set(t) | t.parent[StreamEl]->visited
+  val visited : Attributable => Set[StreamEl] =
+    down[Attributable, Set[StreamEl]] {
+        case t: StreamEl if t isRoot => Set(t)
+        case t: StreamEl             => Set(t) | t.parent[Attributable]->visited
     }
   
   val listStream : ListStreamEl => Streamable[List[T]] =
     attr {
-      case agg@Aggregator(clazz, inner) =>
+      case agg@Aggregator(inner) =>
 //          val singletonList = makeUnaryStreamList(inner.head->stream, { t: T => List(t) })
         
         val paramsStreams: Seq[Streamable[T]] =
@@ -189,7 +200,7 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
 
         paramListStream
         
-      case Generator(clazz, inner) =>
+      case Generator(inner) =>
         val nilStream = streamBuilder.makeSingletonList(Nil)
         val genStream = inner->stream
         
@@ -211,6 +222,7 @@ class StreamablesIml[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
   var process: PartialFunction[(Class[_], T), T] = _
   var injections: Map[Class[_], (Stream[T], Boolean)] = _
   var specificInjections: Map[StreamEl, (Stream[T], Boolean)] = _
+  var filters: Map[Filter, T => Boolean] = _
     
   // initialize data for each traversal
   def initialize = {

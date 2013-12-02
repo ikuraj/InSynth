@@ -52,7 +52,8 @@ class FormatStreamUtils[_](node: Streamable[_], _level: Int) extends Formatable 
 
       case ss: SingleStream[_, _] => "SingleStream" :: header(node)// :: paren(trans(ss.stream, level - 1))
       case ss: ordered.SingleStream[_] => "ord.SingleStream" :: header(node)// :: paren(trans(ss.stream, level - 1))
-            
+      case fs: ordered.FiniteStream[_] => "ord.FiniteStream" :: header(node)
+
       case us: ordered.UnaryStream[_, _] => "ord.UnaryStream" :: header(node) ::
       	paren(trans(us.streamable, level - 1, visited + node))
       case us: UnaryStream[_, _] => "UnaryStream" :: header(node) ::

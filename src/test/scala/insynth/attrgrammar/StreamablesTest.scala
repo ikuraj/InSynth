@@ -221,49 +221,176 @@ class StreamablesTest extends FunSuite with ShouldMatchers {
 //    }    
 //    
 //  }
+//  
+//  test("alternater stream test") {
+//    
+//    case class Method(exp: Expression)
+//    trait Expression
+//    case class Add(a: Int, b: Int) extends Expression
+//    case class Multiply(a: Int, b: Int) extends Expression
+//    
+//    val intValNode = Injecter(classOf[Int])
+//    val intValuesNode = Aggregator(classOf[Int], Seq(intValNode, intValNode))
+//    val addNode = Combiner(classOf[Add], intValuesNode)
+//    val mulNode = Combiner(classOf[Multiply], intValuesNode)
+//    val exprNode = Alternater(classOf[Expression], Seq(addNode, mulNode))
+////    val exprNode = Alternater(classOf[Expression], Seq(addNode))
+//    val methodNode = Single(classOf[Method], exprNode)
+//    
+//    val streamables = new StreamablesIml(streamFactory)
+//    
+//    val resultStream = streamables.getStreamPairs(
+//      methodNode,
+//      {
+//        case (clazz, e: Expression) if clazz == classOf[Method] => Method(e)
+//      },
+//      {
+//        case (clazz, (a: Int) :: (b: Int) :: Nil) if clazz == classOf[Multiply] =>
+//          Multiply(a, b)
+//        case (clazz, (a: Int) :: (b: Int) :: Nil) if clazz == classOf[Add] =>
+//          Add(a, b)
+//      },
+//      Map( classOf[Int] -> ( Stream(1, 2, 3), false ) )
+//    )
+//    
+//    val expected: List[Expression] =
+//      generateLists(2, 1 to 3) flatMap {
+//        case a :: b :: Nil =>
+//          Add(a, b) :: Multiply(a, b) :: Nil
+//        case _ => fail
+//      }
+//        
+//    withClue ( resultStream.take(25).mkString("\n") ) {
+//      resultStream.take(25).size should be (3 * 3 * 2)
+//      for(ex <- expected)
+//        assert( resultStream.take(25).map(_._1).toSet contains Method(ex), "does not contain " + ex )
+//    }    
+//    
+//  }
   
-  test("alternater stream test") {
+  test("simple alternater streamable recursion test") {
     
-    case class Method(exp: Expression)
     trait Expression
-    case class Add(a: Int, b: Int) extends Expression
-    case class Multiply(a: Int, b: Int) extends Expression
+    case class Add(a: Expression, b: Expression) extends Expression    
+    case class JustInt(a: Int) extends Expression
     
     val intValNode = Injecter(classOf[Int])
-    val intValuesNode = Aggregator(classOf[Int], Seq(intValNode, intValNode))
-    val addNode = Combiner(classOf[Add], intValuesNode)
-    val mulNode = Combiner(classOf[Multiply], intValuesNode)
-    val exprNode = Alternater(classOf[Expression], Seq(addNode, mulNode))
-//    val exprNode = Alternater(classOf[Expression], Seq(addNode))
-    val methodNode = Single(classOf[Method], exprNode)
+    val justIntNode = Single(classOf[JustInt], intValNode)
+    val exprNode = Alternater(classOf[Expression], List(justIntNode))
+    val exprsNode = Aggregator(Seq(exprNode, exprNode))
+    val addNode = Combiner(classOf[Add], exprsNode)
+    exprNode.addStreamEl(addNode)
     
     val streamables = new StreamablesIml(streamFactory)
     
-    val resultStream = streamables.getStreamPairs(
-      methodNode,
+    val resultStream = streamables.getStreamable(
+      addNode,
       {
-        case (clazz, e: Expression) if clazz == classOf[Method] => Method(e)
+        case (clazz, e: Int) if clazz == classOf[JustInt] => JustInt(e)
       },
       {
-        case (clazz, (a: Int) :: (b: Int) :: Nil) if clazz == classOf[Multiply] =>
-          Multiply(a, b)
-        case (clazz, (a: Int) :: (b: Int) :: Nil) if clazz == classOf[Add] =>
+        case (clazz, (a: Expression) :: (b: Expression) :: Nil) if clazz == classOf[Add] =>
           Add(a, b)
       },
       Map( classOf[Int] -> ( Stream(1, 2, 3), false ) )
     )
     
-    val expected: List[Expression] =
-      generateLists(2, 1 to 3) flatMap {
-        case a :: b :: Nil =>
-          Add(a, b) :: Multiply(a, b) :: Nil
+    withClue(FormatStreamUtils(resultStream)) {
+      resultStream match {
+        case us: ord.UnaryStream[_, _] =>
+          us.streamable match {
+            case bs: ord.BinaryStream[_, _, _] =>
+              bs.s2 match {
+                case us: ord.UnaryStream[_, _] =>
+                  us.streamable match {
+                    case bs: ord.LazyRoundRobbin[_] =>
+                      
+                    case _ => fail
+                  }                  
+                case _ => fail          
+              }
+          }
         case _ => fail
       }
-        
-    withClue ( resultStream.take(25).mkString("\n") ) {
-      resultStream.take(25).size should be (3 * 3 * 2)
-      for(ex <- expected)
-        assert( resultStream.take(25).map(_._1).toSet contains Method(ex), "does not contain " + ex )
+    }
+    
+  }
+  
+  test("simple alternater stream recursion test") {
+    
+    trait Expression
+    case class Add(a: Expression, b: Expression) extends Expression    
+    case class JustInt(a: Int) extends Expression
+    
+    val intValNode = Injecter(classOf[Int])
+    val justIntNode = Single(classOf[JustInt], intValNode)
+    val exprNode = Alternater(classOf[Expression], List(justIntNode))
+    val exprsNode = Aggregator(Seq(exprNode, exprNode))
+    val addNode = Combiner(classOf[Add], exprsNode)
+    exprNode.addStreamEl(addNode)
+    
+    val streamables = new StreamablesIml(streamFactory)
+    
+    val resultStream = streamables.getStreamPairs(
+      addNode,
+      {
+        case (clazz, e: Int) if clazz == classOf[JustInt] => JustInt(e)
+      },
+      {
+        case (clazz, (a: Expression) :: (b: Expression) :: Nil) if clazz == classOf[Add] =>
+          Add(a, b)
+      },
+      Map( classOf[Int] -> ( Stream(1, 2, 3), false ) )
+    )
+    
+    withClue ( resultStream.take(50).mkString("\n") ) {
+      resultStream.take(50).size should be (50)
+      for(ex <- List(
+        (Add(Add(JustInt(1), JustInt(1)), Add(JustInt(2), JustInt(1))), 8.0)
+      ))
+        assert( resultStream.take(50).toSet contains ex, "does not contain " + ex )
+    }    
+    
+  }
+
+  test("alternater stream recursion test") {
+    
+    trait Expression
+    case class Add(a: Expression, b: Expression) extends Expression    
+    case class Mul(a: Expression, b: Expression) extends Expression    
+    case class JustInt(a: Int) extends Expression
+    
+    val intValNode = Injecter(classOf[Int])
+    val justIntNode = Single(classOf[JustInt], intValNode)
+    val exprNode = Alternater(classOf[Expression], List(justIntNode))
+    val exprsNode = Aggregator(Seq(exprNode, exprNode))
+    val addNode = Combiner(classOf[Add], exprsNode)
+    val mulNode = Combiner(classOf[Mul], exprsNode)
+    exprNode.addStreamEl(addNode)
+    exprNode.addStreamEl(mulNode)
+    
+    val streamables = new StreamablesIml(streamFactory)
+    
+    val resultStream = streamables.getStreamPairs(
+      addNode,
+      {
+        case (clazz, e: Int) if clazz == classOf[JustInt] => JustInt(e)
+      },
+      {
+        case (clazz, (a: Expression) :: (b: Expression) :: Nil) if clazz == classOf[Add] =>
+          Add(a, b)
+        case (clazz, (a: Expression) :: (b: Expression) :: Nil) if clazz == classOf[Mul] =>
+          Mul(a, b)
+      },
+      Map( classOf[Int] -> ( Stream(1, 2, 3), false ) )
+    )
+    
+    withClue ( resultStream.take(100).mkString("\n") ) {
+      resultStream.take(100).size should be (100)
+      for(ex <- List(
+        (Add(Mul(JustInt(1), JustInt(1)), Add(JustInt(2), JustInt(1))), 8.0)
+      ))
+        assert( resultStream.take(100).toSet contains ex, "does not contain " + ex )
     }    
     
   }
