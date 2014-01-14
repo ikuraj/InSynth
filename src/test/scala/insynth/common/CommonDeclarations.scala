@@ -131,4 +131,54 @@ object CommonDeclarations {
     )	 
   }
 
+  object FromLeonTestcases {
+    def addressBookMakeAddressBookHelpers = {
+      val declarationsString =
+			  """
+				setA : List => Set[Address]
+				Nil : Nil
+				bComp : Address => Int
+				aComp : Address => Int
+				size : List => Int
+				size : AddressBook => Int
+				Cons : (Address, List) => Cons
+				priv : Address => Boolean
+				= : (Int, Int) => Boolean
+				> : (Int, Int) => Boolean
+				< : (Int, Int) => Boolean
+				<= : (Int, Int) => Boolean
+				= : (Boolean, Boolean) => Boolean
+				Not : Boolean => Boolean
+				And : (Boolean, Boolean) => Boolean
+				isInstance[Cons] : List => Boolean
+				isInstance[Nil] : List => Boolean
+				allPrivate : List => Boolean
+				allBusiness : List => Boolean
+				addToPers : (AddressBook, Address) => AddressBook
+				addToBusiness : (AddressBook, Address) => AddressBook
+				AddressBook : (List, List) => AddressBook
+				makeAddressBook : List => AddressBook
+				a : Cons => Address
+				Address : (Int, Int, Boolean) => Address
+				l.a : Address
+				l.tail : List
+				l : Cons
+				pers : AddressBook => List
+				business : AddressBook => List
+				[Nil=>List] : Nil => List
+				tail : Cons => List
+				[Cons=>List] : Cons => List
+			  """.stripMargin
+			  
+		  val pattern = ".* : (.*)".r
+			  
+		  for(declLine <- declarationsString.split("\n")) {
+		    declLine match {
+		      case pattern(asd) => null
+		      case _ => null
+		    }
+		  }
+    }
+  }
+
 }
