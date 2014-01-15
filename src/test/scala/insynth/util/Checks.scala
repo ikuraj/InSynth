@@ -2,6 +2,9 @@ package insynth.util
 
 import org.scalatest._
 import org.scalatest.matchers._
+import org.scalatest.Tag
+
+object FocusTag extends Tag("focus")
 
 object Checks {
 

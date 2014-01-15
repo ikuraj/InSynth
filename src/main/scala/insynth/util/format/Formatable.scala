@@ -12,14 +12,14 @@ trait Formatable {
 
   def println() = {
     val stdWriter = new java.io.OutputStreamWriter(System.out)
-    this.toDocument.format(140, stdWriter)
+    this.toDocument.format(120, stdWriter)
     stdWriter.write('\n')
     stdWriter.flush()
   }
 
   override def toString = {
     val stringWriter = new java.io.StringWriter
-    this.toDocument.format(140, stringWriter)
+    this.toDocument.format(120, stringWriter)
     stringWriter.flush()
     stringWriter.toString
   }
@@ -35,10 +35,10 @@ object FormatHelpers {
     group("{" :/: d :/: "}")
 
   def nestedParen(d: Document): Document =
-    group("(" :: nest(1, break :: d) :/: ")")
+    group("(" :/: nest(1, break :: d) :/: ")")
 
   def nestedBrackets(d: Document): Document =
-    group("{" :: nest(1, break :: d) :/: "}")
+    group("{" :/: nest(1, break :: d) :/: "}")
 
   def sqBrackets(d: Document) =
     group("[" :: d :: "]")
