@@ -14,37 +14,39 @@ class OrderedStreamFactory[T] extends StreamFactory[T] with HasLogger {
   override def makeSingletonList[U <: T](element: List[U]) = Singleton(element)
   
   override def makeSingleStream[U <: T](stream: => Stream[(U, Int)]) =    
-//    SingleStream(stream zip Stream.from(1)) 
-    SingleStream(stream)
+    WrapperStream(stream)
 
   override def makeFiniteStream[U <: T](array: => Vector[(U, Int)]) =
 //    FiniteStream(array zip Vector.range(1, array.size + 1))
     FiniteStream(array)
   
-  override def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X=>Y, modifyVal: Option[Int => Int] = None) =
-    UnaryStream(streamable.asInstanceOf[OrderedStreamable[X]], modify, modifyVal)
+  override def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X=>Y, modifyVal: Int => Int) =
+    UnaryStream(streamable.asInstanceOf[IntegerWeightStreamable[X]], modify, modifyVal)
+
+  override def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X=>Y) =
+    UnaryStream(streamable.asInstanceOf[IntegerWeightStreamable[X]], modify)
   
   override def makeUnaryStreamList[X, Y <: T](streamable: Streamable[X], modify: X => List[Y]) =
-    UnaryStream(streamable.asInstanceOf[OrderedStreamable[X]], modify)
+    UnaryStream(streamable.asInstanceOf[IntegerWeightStreamable[X]], modify)
     
   override def makeFilterStream[U <: T](streamable: Streamable[U], filterFun: U => Boolean) =
-    FilterStream(streamable.asInstanceOf[OrderedStreamable[U]], filterFun)
+    FilterStream(streamable.asInstanceOf[IntegerWeightStreamable[U]], filterFun)
   
   override def makeBinaryStream[X, Y, Z <: T](s1: Streamable[X], s2: Streamable[Y])(combine: (X, Y) => List[Z]) =
-    BinaryStream(s1.asInstanceOf[OrderedStreamable[X]], s2.asInstanceOf[OrderedStreamable[Y]])(combine)
+    BinaryStream(s1.asInstanceOf[IntegerWeightStreamable[X]], s2.asInstanceOf[IntegerWeightStreamable[Y]])(combine)
   
   override def makeRoundRobbin[U <: T](streams: Seq[Streamable[U]]) =
-    RoundRobbin(streams.asInstanceOf[Seq[OrderedStreamable[U]]].toIndexedSeq)
+    RoundRobbin(streams.asInstanceOf[Seq[IntegerWeightStreamable[U]]])
   
   override def makeLazyRoundRobbin[U <: T](initStreams: Seq[Streamable[U]]) =
-    LazyRoundRobbin[U](initStreams.asInstanceOf[Seq[OrderedStreamable[U]]].toIndexedSeq)
+    LazyRoundRobbin[U](initStreams.asInstanceOf[Seq[IntegerWeightStreamable[U]]])
       
   def makeLazyRoundRobbinList[U <: T](initStreams: Seq[Streamable[List[U]]]) =    
-    LazyRoundRobbin[List[U]](initStreams.asInstanceOf[Seq[OrderedStreamable[List[U]]]].toIndexedSeq)
+    LazyRoundRobbin[List[U]](initStreams.asInstanceOf[Seq[IntegerWeightStreamable[List[U]]]])
   
   def getFinalStream(streamable: Streamable[T]) = 
     streamable match {
-      case os: OrderedStreamable[_] =>
+      case os: IntegerWeightStreamable[_] =>
         fine("returning ordered streamable")
         os.getStream zip os.getValues.map(_.toFloat)
       case _: Streamable[_] =>

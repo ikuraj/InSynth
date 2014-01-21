@@ -16,32 +16,13 @@ class OrderedExtractorTest extends JUnitSuite {
   import CommonDeclarations._
   import CommonLambda._
   import CommonProofTrees._
+  import CommonUtils._
     
   val extractor = new Transformer(new OrderedStreamFactory)
   
   val maxElToOutput = 20
   
   import lambda.Node._
-  
-  def assertWeight(lambdaNode: lambda.Node, weight: Float) =
-    assertEquals(size(lambdaNode), weight, 0f)
-    
-  def assertWeight(expected: Int, weight: Float) =
-    assertEquals(expected.toFloat, weight, 0f)	
-    
-  def assertWeight(pair: (lambda.Node, Float)) =
-    assertEquals("Node " + pair._1, size(pair._1), pair._2, 0f)	    
-    
-  def assertTake(stream: Stream[(lambda.Node, Float)], num: Int) = {
-    val result = stream take num
-    val message = "Part of the resulting stream: " + result.take(maxElToOutput).mkString("\n")
-    
-    for (ind <- 0 until result.size)
-      assertWeight(result(ind))
-    for (ind <- 0 until result.size - 1)
-      assertTrue("Weight are not in non-decreasing order.\n" + "At position " + ind + "\n" + message, stream(ind)._2 <= stream(ind + 1)._2)
-    result
-  }
       
   @Test
   def treeReconstructBooleanToIntIntermediate: Unit = {  

@@ -2,19 +2,16 @@ package insynth
 package attrgrammar
 
 import scala.collection.mutable.{ Map => MutableMap }
-
 import org.kiama.attribution.Attribution
 import org.kiama.attribution.Attributable
 import org.kiama.attribution.Attribution._
 import org.kiama.attribution.Decorators._
-
 import streams._
 import reconstruction.stream._
 import util.logging._
-
 import StreamableAST._
-
 import scala.language.postfixOps
+import insynth.streams.ordered.IntegerWeightStreamable
 
 trait Streamables[T] {
   
@@ -197,7 +194,7 @@ class StreamablesImpl[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
         
         makeUnaryStream(paramListStream,
           (list: List[T]) => combiner(c, list)
-          , Some(_ + 1))
+          , _ + 1)
         
       case Empty =>
         makeEmptyStreamable
@@ -252,7 +249,7 @@ class StreamablesImpl[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
           makeBinaryStream(listStream, genStream) { (list, el2) => list :+ el2 }
         
         listStream addStreamable constructorStream
-        listStream.initialize
+//        listStream.initialize
 
         listStream
     }
@@ -284,18 +281,18 @@ class StreamablesImpl[T](streamBuilder: StreamFactory[T]) extends Streamables[T]
       assert(!paramInitStream.isInitialized, "!paramInitStream.isInitialized")
       
       // initialize the lazy round robbin
-      paramInitStream.initialize
+//      paramInitStream.initialize
     }
   }
   
   def extractPairStream(s: Streamable[_]) = 
     s match {
-      case os: OrderedStreamable[_] =>
+      case os: IntegerWeightStreamable[_] =>
         fine("returning ordered streamable")
-        os.getStream zip os.getValues.map(_.toFloat)
+        os.getValuedStream
       case us: Streamable[_] =>
         fine("returning unordered streamable")
-        us.getStream zip Stream.continually(0f)
+        us.getStream zip Stream.continually(0)
     }
   
 //    val recursiveParamsMap : StreamEl => Map[StreamEl, (LazyStreamable, Set[T])] =

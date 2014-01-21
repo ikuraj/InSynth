@@ -51,7 +51,7 @@ class FormatStreamUtils[_](node: Streamable[_], _level: Int) extends Formatable 
       case _: Singleton[_] => "Singleton" :: header(node)
 
       case ss: SingleStream[_, _] => "SingleStream" :: header(node)// :: paren(trans(ss.stream, level - 1))
-      case ss: ordered.SingleStream[_] => "ord.SingleStream" :: header(node)// :: paren(trans(ss.stream, level - 1))
+      case ss: ordered.WrapperStream[_] => "ord.SingleStream" :: header(node)// :: paren(trans(ss.stream, level - 1))
 
       case fs: ordered.FiniteStream[_] => "ord.FiniteStream" :: header(node) :: brackets(
         foldDoc(fs.getStream.map(_.toString: Document).take(3).toList, ", ")
@@ -87,10 +87,10 @@ class FormatStreamUtils[_](node: Streamable[_], _level: Int) extends Formatable 
       case Empty => "Empty"
 
       case lrr: LazyRoundRobbin[_] => "LazyRoundRobbin" :: header(node) :/: nestedBrackets(
-        foldDoc(lrr.getStreams map { trans(_, level - 1, visited + node) }, "\n")
+        foldDoc(lrr.getStreamables map { trans(_, level - 1, visited + node) }, "\n")
       )
       case lrr: ordered.LazyRoundRobbin[_] => "ord.LazyRoundRobbin" :: header(node) :: nestedBrackets(
-        foldDoc(lrr.getStreams map { trans(_, level - 1, visited + node) }, "\n")
+        foldDoc(lrr.getStreamables map { trans(_, level - 1, visited + node) }, "\n")
       )
 
       case rr: ordered.RoundRobbin[_] => "ord.RoundRobin" :: header(node) :/: nestedBrackets(

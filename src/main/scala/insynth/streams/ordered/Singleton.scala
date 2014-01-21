@@ -3,21 +3,18 @@ package insynth.streams.ordered
 import insynth.streams._
 import insynth.streams.unordered.{ Singleton => UnordSingleton }
 
-class Singleton[T](element: T) extends OrderedStreamable[T] {
+case class Singleton[T](element: T, value: Int = 1) extends IntegerWeightStreamable[T] {
   
-  override def isInfinite = false
+  override def size = 1
   
-  override def isDepleted: Boolean = true // this does not matter
-  override def nextReady(ind: Int): Boolean = ind == 0
-    
-  override def getStream = Stream(element)
+  override def toString = "ord.ST[ " + element.toString + ']'
   
-  override def toString = element.toString
-  
-  override def getValues = Stream(1)
+  override def getValuedStream = Stream( (element, 1) )
   
 }
 
 object Singleton {
-  def apply[T](element: T) = new Singleton(element)
+
+//  def apply[T](element: T) = new Singleton(element)
+
 }

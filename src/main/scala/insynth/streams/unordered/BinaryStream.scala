@@ -13,6 +13,10 @@ import scala.collection.immutable.Stream.consWrapper
  */
 class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])(combine: (T, V) => U) extends Streamable[U] {
     
+  override def size =
+    if (s1.size <= -1 || s2.size <= -1) -1
+    else s1.size + s2.size
+
   // if one of the streams is infinite we will have an infinite stream
   lazy val isInfiniteFlag = s1.isInfinite || s2.isInfinite
   

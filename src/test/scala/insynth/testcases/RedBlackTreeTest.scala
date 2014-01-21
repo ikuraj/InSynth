@@ -27,6 +27,8 @@ import scala.language.implicitConversions
 
 class RedBlackTreeTest extends FunSuite with ShouldMatchers {
   
+  type Weight = Int
+  
   import Structures._
   import StreamableAST._
   import Checks._
@@ -250,8 +252,8 @@ class RedBlackTreeTest extends FunSuite with ShouldMatchers {
 	      Map( filteredTrees -> ( (e: Any) => invariant(e.asInstanceOf[Tree]) ) )
 	    )
     
-	    var resList: List[(Any, Float)] = null
-	    def checkSize = (p: (Any, Float)) => RedBlackTrees.size(p._1.asInstanceOf[Tree]) == treeSize
+	    var resList: List[(Any, Weight)] = null
+	    def checkSize = (p: (Any, Weight)) => RedBlackTrees.size(p._1.asInstanceOf[Tree]) == treeSize
       
 	    var foundAll = false
 	    var bound = -1

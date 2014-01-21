@@ -19,7 +19,7 @@ object Checks {
     
   }
 
-  def nonDecreasing[T](elements: Iterable[(T, Float)]) = {
+  def nonDecreasing[T](elements: Iterable[(T, Int)]) = {
     (elements zip elements.tail) forall {
       case ((_, f), (_, s)) => f <= s
     }

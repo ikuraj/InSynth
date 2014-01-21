@@ -182,7 +182,7 @@ class StreamCombinationsTest extends JUnitSuite {
       (x, y) => x * y
     }
 
-    rr.streams ++= List(bs1, bs2)
+    rr addStreamable List(bs1, bs2)
 
     rr.initialize
 
@@ -214,7 +214,7 @@ class StreamCombinationsTest extends JUnitSuite {
       (x, y) => x + y
     }
 
-    rr.streams ++= List(bs1, bs2)
+    rr addStreamable List(bs1, bs2)
 
     rr.initialize
 

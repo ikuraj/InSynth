@@ -5,29 +5,16 @@ package ordered
 import unordered.{ SingleStream => UnSingleStream }
 import util.logging._
 
-// NOTE this would require ordered stream
-class FiniteStream[T](arr: => Seq[(T, Int)])
-	extends OrderedStreamable[T] with HasLogger {
-  
-  var nextInd = 0
-  val iterator = arr.iterator
-  val stream = Stream.fill( arr.size )( {
-    nextInd+=1;
-    fine("nextInd is " + nextInd)
-    iterator.next
-  } )
+class FiniteStream[T](coll: => Seq[(T, Int)])
+	extends IntegerWeightStreamable[T] with HasLogger {
+  require(coll.hasDefiniteSize)
+  require(coll.sortBy(_._2) == coll, "Given collection must be sorted")
   
   override def isInfinite = false
   
-  override def isDepleted: Boolean = nextInd >= arr.size // wtv
-  override def nextReady(ind: Int): Boolean = {
-    fine("nextReady for " + ind + " is " + (ind<arr.size))
-    ind < arr.size
-  }
+  override def getValuedStream = coll.toStream
   
-  override def getStream = stream map { _._1 }
-  
-  override def getValues = stream map { _._2 }
+  override def size = coll.size
     
 }
 

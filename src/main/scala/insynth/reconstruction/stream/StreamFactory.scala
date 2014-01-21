@@ -14,7 +14,9 @@ trait StreamFactory[T] {
 
   def makeFiniteStream[U <: T](array: => Vector[(U, Int)]): Streamable[T]
   
-  def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X => Y, modifyVal: Option[Int => Int] = None): Streamable[T]
+  def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X => Y, modifyVal: Int => Int): Streamable[T]
+  
+  def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X => Y): Streamable[T]
   
   def makeUnaryStreamList[X, Y <: T](streamable: Streamable[X], modify: X => List[Y]): Streamable[List[T]]
     
