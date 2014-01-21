@@ -18,15 +18,26 @@ class LazyRoundRobbin[T](val initStreams: Seq[IntegerWeightStreamable[T]])
   require(initStreams.size > 0)
     
   override def getValuedStream = {
-    val minIt = initIterators.minBy(_.head._2)
+    // set of iterators checked for next value
+    val initIterators = Array(initStreams.map(_.getValuedStream.iterator.buffered): _*)
+
+    val (minIt, minInd) = initIterators.zipWithIndex.minBy(_._1.head._2)
+    
+    lazy val allIterators = Array(
+      (initIterators ++
+      addedStreams.map( _.getValuedStream.iterator.buffered ))
+    : _*)
     
     initialized = true
 
-    minIt.next #:: getNext(0)
+    minIt.head #:: getNext(minInd, allIterators)
   }
 
-  private def getNext(lastIndex: Int): Stream[IntegerWeightPair[T]] = {
+  private def getNext(lastIndex: Int, allIterators: Array[BufferedIterator[IntegerWeightPair[T]]]):
+    Stream[IntegerWeightPair[T]] = {
     entering("getNext", lastIndex)
+    
+    allIterators(lastIndex).next
         
     // at the end -1 means no next element was found
     var minInd = -1
@@ -48,43 +59,57 @@ class LazyRoundRobbin[T](val initStreams: Seq[IntegerWeightStreamable[T]])
         minInd = indToCheck
         minValue = iterator.head._2
         minStream = iterator.head #:: {
-          getNext(minInd)
+          getNext(minInd, allIterators)
         }
       }
       
     }
-    
-    allIterators(minInd).next
 
     exiting("getMinIterator", minStream)
   }
-  
-  // set of iterators checked for next value
-  val initIterators = Array(initStreams.map(_.getValuedStream.iterator.buffered): _*)
-  
-  lazy val allIterators = Array(
-    (initIterators ++
-    addedStreams.map(_.getValuedStream.iterator.buffered))
-  : _*)
     
   var initialized = false
       
-  var addedStreams = mutable.LinkedList[Counted[T]]()
+  var filterStreams = mutable.LinkedList[Counted[T]]()
+  
+  var addedStreams = mutable.LinkedList[IntegerWeightStreamable[T]]()
   
   override def getStreamables = (initStreams ++ addedStreams).toList
     
   // XXX terrible hack, since adding non-ordered streamable will break the code
   override def addStreamable[U >: T](s: Streamable[U]) =
-    addedStreams :+= (s.asInstanceOf[Counted[T]])
+    if (initialized) throw new UnsupportedOperationException("Cannot add new streamables once initialized")
+    else addedStreams :+= (s.asInstanceOf[IntegerWeightStreamable[T]])
   
   override def addStreamable[U >: T](s: Traversable[Streamable[U]]) =
-    addedStreams ++= (s.asInstanceOf[Traversable[Counted[T]]])
+    if (initialized) throw new UnsupportedOperationException("Cannot add new streamables once initialized")
+    else addedStreams ++= (s.asInstanceOf[Traversable[IntegerWeightStreamable[T]]])
   
   override def isInitialized = initialized
   
   def initialize = { }
 
   override def size = -1
+  
+  class RecursiveStreamableIterator(streamable: Counted[T]) extends BufferedIterator[IntegerWeightPair[T]]{
+    
+    var nextToEnumerate = 0
+    
+    lazy val iterator = {
+      throw new RuntimeException
+      streamable.getValuedStream.iterator.buffered
+    }
+    
+    override def hasNext = nextToEnumerate < streamable.enumerated
+    
+    override def head = iterator.head
+    
+    override def next = {
+      nextToEnumerate += 1
+      iterator.next
+    }
+    
+  }
 
 }
 
