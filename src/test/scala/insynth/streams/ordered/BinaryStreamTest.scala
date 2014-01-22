@@ -11,7 +11,7 @@ import org.junit.Test
 // enable implicit conversions
 import scala.language.implicitConversions
 
-class BinaryStreamTest /*extends JUnitSuite */{    
+class BinaryStreamTest extends JUnitSuite {    
   
   import Utils._
   
@@ -198,7 +198,7 @@ class BinaryStreamTest /*extends JUnitSuite */{
 		    assertEquals(
 	        streamToString(stream)(8),
 	        List( List(1, 2), List(2,2), List(1,4), List(3,2), 
-          List(4,2), List(2,4), List(1, 6), List(5, 2) ) map
+          List(2,4), List(4,2), List(3, 4), List(1, 6) ) map
 	        	{ x => NumberList(x map { Number(_) }) },
 	        stream.take(8).toList
 	      )
@@ -249,8 +249,8 @@ class BinaryStreamTest /*extends JUnitSuite */{
 		    assertTrue(bs.isInfinite)
 		    assertEquals(
 	        streamToString(stream)(9),
-	        List( List(10, 1), List(10, 2), List(11, 1), List(12, 1), List(11,2), List(10, 3),
-	            List(11, 3), List(12, 2), List(13,1) ) map
+	        List( List(10, 1), List(10, 2), List(11, 1), List(11,2), List(10, 3), List(12, 1),
+	            List(12, 2), List(11, 3), List(13,1) ) map
 	        	{ x => NumberList(x map { Number(_) }) },
 	        stream.take(9)
 	      )

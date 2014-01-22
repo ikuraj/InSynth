@@ -131,7 +131,8 @@ class StreamCombinationsTest extends JUnitSuite {
 
       val stream = bs.getStream
 
-      assertFalse(bs.isInfinite)
+      // whenever we have lazy round robbin, its infinite
+      assertTrue(bs.isInfinite)
       assertEquals(
         stream.take(1) mkString (", "),
         List(3),
@@ -157,7 +158,7 @@ class StreamCombinationsTest extends JUnitSuite {
 
       val stream = bs.getStream
 
-      assertFalse(bs.isInfinite)
+      assertTrue(bs.isInfinite)
       assertEquals(
         stream.take(5) mkString (", "),
         List(List(1,2), List(1,3), List(3,2), List(3,3), List(1,6)),

@@ -28,31 +28,34 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	  def getValuedStream = {
 	    // picks next element from all "active" iterators according to weight 
 	    // NOTE: index to ensure fairness in choosing the next value
-	    def loop(lastIndex: Int): Stream[ValuePairOut] = {
-	      val minInd = getMinIterator(lastIndex)
-		    
-	      if (minInd >= 0) {
-		      // advance the next iterator
-			    val nextValue = iterators(minInd).next
-			    info("next value is " + nextValue)
-			    // filter iterators
-			    swapIterators
-			    
-	        nextValue #:: loop(minInd)
-	      }
-	      else
-	        Stream.empty
-	    }
+//	    def loop(lastIndex: Int): Stream[ValuePairOut] = {
+//	      val minInd = getMinIterator(lastIndex)
+//		    
+//	      if (minInd >= 0) {
+//		      // advance the next iterator
+//			    val nextValue = iterators(minInd).next
+//			    info("next value is " + nextValue)
+//			    // filter iterators
+//			    swapIterators
+//			    
+//	        nextValue #:: loop(minInd)
+//	      }
+//	      else
+//	        Stream.empty
+//	    }
 	    
+	    val s1stream = s1.getValuedStream
+	    val s2stream = s2.getValuedStream
 	    // we start with enumerating first element from leftStream, i.e. s1(0):s2(0)
-	    val initialStream = leftStream(0, s1.getValuedStream, s2.getValuedStream)
+	    val initialStream = leftStream(0, s1stream, s2stream)
 	
 	    // stream combines head elements of both streams
 	    initialStream.head #:: {
 	      // after enumeration of head, add the first left/right stream iterators
 	      addToIterators( initialStream.tail.iterator.buffered )
-	      addToIterators( rightStream(0, s1.getValuedStream.tail, s2.getValuedStream).iterator.buffered )
-	      loop(0)
+	      if (!s1stream.tail.isEmpty)
+	      	addToIterators( rightStream(0, s1stream.tail, s2stream).iterator.buffered )
+	      getNext(0)
 	    }
 	  }
       
@@ -62,12 +65,12 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	   * @param lastIndex index of previously forwarded iterator
 	   * @return index of the iterator with minimal weight
 	   */
-	  private def getMinIterator(lastIndex: Int) = {
-	    entering("next", lastIndex)
+	  private def getNext(lastIndex: Int): Stream[ValuePairOut] = {
+	    entering("getNext", lastIndex)
 	        
 	    // at the end -1 means no next element was found
 	    var minValue = Int.MaxValue
-	    var minInd = -1
+	    var result = Stream[ValuePairOut]()
 	            
 	    // add all pending iterators
 	    iterators appendAll iteratorsToBeAdded
@@ -84,13 +87,16 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	    ) {
 	      if ( iterator.head._2 < minValue ) {
 	        minValue = iterator.head._2
-	        minInd = indToCheck
+	        result = iterator.head #:: {
+	          iterator.next
+	          getNext(indToCheck)
+	        }
 	      }
 	      
 	      iterators_shadow += iterator
 	    }
 	
-	    exiting("next", minInd)
+	    exiting("getNext", result)
 	  }
 	  
 	  def combineTwoValues( v1: ValuePairLeft, v2: ValuePairRight ) =
