@@ -13,6 +13,10 @@ trait AddStreamable[+T] {
   
   def addStreamable[U >: T](s: Traversable[Streamable[U]])
   
+  def addFilterable[U >: T](s: Counted[U])
+  
+  def addFilterable[U >: T](s: Traversable[Counted[U]])
+  
   // NOTE: the streamable is initialized once the getStream method is called
   def isInitialized: Boolean
   

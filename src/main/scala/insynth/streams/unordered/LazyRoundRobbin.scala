@@ -1,4 +1,5 @@
-package insynth.streams.unordered
+package insynth.streams
+package unordered
 
 import scala.collection.mutable.{ Map => MutableMap, LinkedList => MutableList, Set => MutableSet }
 
@@ -26,6 +27,12 @@ class LazyRoundRobbin[T](val initStreams: List[Streamable[T]]) extends Streamabl
   // XXX terrible hack, fix this
   override def addStreamable[U >: T](s: Traversable[Streamable[U]]) =
     streams ++= (s.asInstanceOf[Traversable[Streamable[T]]])
+  
+  override def addFilterable[U >: T](s: Counted[U]) =
+    throw new RuntimeException
+  
+  override def addFilterable[U >: T](s: Traversable[Counted[U]]) =
+    throw new RuntimeException
   
   override def isInitialized = initialized
   

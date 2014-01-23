@@ -4,6 +4,26 @@ import insynth.streams._
 
 object Utils {
   
+  def compareCallsToGetStream[T](s: IntegerWeightStreamable[T], maxCalls: Int = 20) {
+    val s1 = s.getValuedStream
+    val s2 = s.getValuedStream
+    
+    for (ind <- 1 to maxCalls; toTake = 50 * ind) {
+      assert ( s1.take(toTake) == s2.take(toTake) )
+      assert ( s1.take(toTake) == s.getValuedStream.take(toTake) )
+    }
+  }
+  
+  def compareCallsToGetStream[T](coll: Traversable[IntegerWeightStreamable[T]]) {
+    for (s <- coll)
+      compareCallsToGetStream(s)
+  }
+  
+  def compareCallsToGetStream(coll: Traversable[IntegerWeightStreamable[Int]], maxCalls: Int) {
+    for (s <- coll)
+      compareCallsToGetStream(s, maxCalls)
+  }
+  
   // dummy here for these pesky erasure errors
   def getSingleStream[T](streamToUse: => Stream[(T, Int)], flag: Boolean = false)(implicit s:DummyImplicit): IntegerWeightStreamable[T] =
     WrapperStream(streamToUse, flag)

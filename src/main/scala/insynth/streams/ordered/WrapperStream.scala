@@ -35,16 +35,16 @@ object WrapperStream {
 
   def counted[T](stream: => Seq[(T, Int)]) =
     if (stream.hasDefiniteSize)
-      new FiniteStream(stream) with Counted[T]
+      new FiniteStream(stream) with OrderedCountable[T]
     else
-      new WrapperStream(stream.toStream) with Counted[T]
+      new WrapperStream(stream.toStream) with OrderedCountable[T]
 
   def counted[T](stream: => Stream[(T, Int)], isInfinite: Boolean) =
     if (isInfinite)
-      new WrapperStream(stream.toStream) with Counted[T]
+      new WrapperStream(stream.toStream) with OrderedCountable[T]
     else
-      new FiniteStream(stream.toList) with Counted[T]
+      new FiniteStream(stream.toList) with OrderedCountable[T]
 
   def counted(el: => Int) =
-    new Singleton(el, el) with Counted[Int]
+    new Singleton(el, el) with OrderedCountable[Int]
 }

@@ -58,8 +58,7 @@ class FilterStreamTest extends FunSuite with ShouldMatchers {
     )
   }
   
-  ignore("infinite values test") {
-  test("infinite values test") {
+  test("elements in the middle") {
     val stream = FilterStream(
       FiniteStream(Vector(1, 2, 3).zipWithIndex), { (x: Int) => x % 2 == 0 }
     )
@@ -67,7 +66,6 @@ class FilterStreamTest extends FunSuite with ShouldMatchers {
     stream.getStream.toList should be (
       Vector(2)
     )
-  }
   }
 
   

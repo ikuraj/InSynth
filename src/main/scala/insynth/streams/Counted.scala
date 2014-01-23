@@ -1,23 +1,43 @@
 package insynth.streams
-package ordered
 
 import insynth.util.logging.HasLogger
 
-trait Counted[T] extends IntegerWeightStreamable[T] with HasLogger {
+trait Counted[T] extends Streamable[T] {
   
-  var _enumerated = 0
+  def enumerated: Int
   
-  def enumerated = _enumerated
+}
+
+package ordered {
+
+  trait OrderedCounted[T] extends ordered.IntegerWeightStreamable[T] with Counted[T] with HasLogger {
+    
+    def enumerated: Int
+    
+  }
   
-  override abstract def getValuedStream = {
-    // each call to getValuedStream will remember its index of next element
-    var nextIndex = 0
-  	super.getValuedStream zip Stream.continually({
-  	  nextIndex += 1
-  	  if (nextIndex > _enumerated) _enumerated = nextIndex
-	  }) map { _._1 }
-  } 
-  
+  trait OrderedCountable[T] extends ordered.IntegerWeightStreamable[T] with Counted[T] with HasLogger {
+    
+    var _enumerated = 0
+    
+    def enumerated = _enumerated
+    
+    override abstract def getValuedStream = {
+      // each call to getValuedStream will remember its index of next element
+      var nextIndex = 0
+      val innerIterator = super.getValuedStream.iterator
+      
+      def loop: Stream[(T, Int)] = {
+        if (innerIterator.hasNext) {
+          nextIndex += 1
+          if (nextIndex > _enumerated) _enumerated = nextIndex          
+          innerIterator.next #:: loop
+        } else Stream.empty
+      }
+      
+      loop
+    }
+  }
 }
 
 
