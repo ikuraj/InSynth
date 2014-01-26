@@ -18,6 +18,7 @@ object Structures {
   import StreamableAST._
   
   val fromOne = Stream.from(1)
+  val ones = Stream.continually(1)
 
   def generateLists(maxSize: Int, integers: Range) = {
     def rec(sizeToGen: Int): List[List[Int]] = {

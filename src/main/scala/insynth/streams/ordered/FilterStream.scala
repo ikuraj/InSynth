@@ -8,11 +8,11 @@ import scala.annotation.tailrec
 class FilterStream[T](val streamable: IntegerWeightStreamable[T], filterFun: T => Boolean)
 	extends IntegerWeightStreamable[T] with Filterable[T] {
   
-//  override def getValuedStream = streamable.getValuedStream filter { p => filterFun(p._1) }
+  override def getValuedStream = streamable.getValuedStream filter { p => filterFun(p._1) }
   
-  lazy val st = streamable.getValuedStream filter { p => filterFun(p._1) }
-  
-  override def getValuedStream = st
+//  lazy val st = streamable.getValuedStream filter { p => filterFun(p._1) }
+//  
+//  override def getValuedStream = st
   
   override def size = -1
   
