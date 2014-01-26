@@ -1,4 +1,5 @@
-package insynth.streams.unordered
+package insynth.streams
+package unordered
 
 import insynth.streams.Streamable
 import scala.collection.immutable.Stream.consWrapper
@@ -98,4 +99,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])(combin
 object BinaryStream {
 	def apply[T, V, U](s1: Streamable[T], s2: Streamable[V])(combine: (T, V) => U) =
 	  new BinaryStream(s1, s2)(combine)
+
+	def memoized[T, V, U](s1: Streamable[T], s2: Streamable[V])(combine: (T, V) => U) =
+	  new BinaryStream(s1, s2)(combine) with Memoized[U]
 }

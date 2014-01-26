@@ -16,6 +16,12 @@ object UnaryStream {
   def apply[T, U](streamable: IntegerWeightStreamable[T], modify: T=>U, modifyVal: Int => Int) =
     new UnaryStreamWithValueMod(streamable, modify, modifyVal)
 
+  def memoized[T, U](streamable: IntegerWeightStreamable[T], modify: T=>U) =
+    new UnaryStream(streamable, modify) with Memoized[U]
+  
+  def memoized[T, U](streamable: IntegerWeightStreamable[T], modify: T=>U, modifyVal: Int => Int) =
+    new UnaryStreamWithValueMod(streamable, modify, modifyVal) with Memoized[U]
+
   def counted[T, U](streamable: IntegerWeightStreamable[T], modify: T=>U) =
     new UnaryStream(streamable, modify) with OrderedCountable[U]
   

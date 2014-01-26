@@ -41,6 +41,9 @@ object FilterStream {
   def apply[T](streamable: IntegerWeightStreamable[T], filterFun: T => Boolean) =
     new FilterStream(streamable, filterFun)
 
+  def memoized[T](streamable: IntegerWeightStreamable[T], filterFun: T => Boolean) =
+    new FilterStream(streamable, filterFun) with Memoized[T]
+
   def counted[T](streamable: IntegerWeightStreamable[T], filterFun: T => Boolean) =
     new FilterStreamCounted(streamable, filterFun)
 //    new FilterStream(streamable, filterFun) with OrderedCounted[T]

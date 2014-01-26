@@ -225,7 +225,7 @@ class RedBlackTreeTest extends FunSuite with ShouldMatchers {
     
     implicit def anyToRBTree(a: Any) = a.asInstanceOf[Tree]
     
-    for(currentSize <- (1 to 6) zip List(
+    for(currentSize <- (1 to 5) zip List(
   		1, 2, 2, 3, 8, 14, 20, 35, 64, 122, 260, 586, 1296, 2708, 5400,
   		10468, 19888, 37580, 71960, 140612, 279264, 560544, 1133760, 2310316,
   		4750368, 9876264, 20788880, 44282696, 95241664, 206150208, 447470464,

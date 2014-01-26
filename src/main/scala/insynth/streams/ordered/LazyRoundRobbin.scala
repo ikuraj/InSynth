@@ -50,7 +50,7 @@ class LazyRoundRobbin[T](val initStreams: Seq[IntegerWeightStreamable[T]])
     var minValue = Int.MaxValue
     var minStream = Stream[IntegerWeightPair[T]]()
     
-    fine("allIterators: " + allIterators.zipWithIndex.mkString(", "))
+    fine("allIterators: " + allIterators.filter(_.hasNext).zipWithIndex.mkString(", "))
     // check all iterators by going from first next after previously forwarded
     for (
       ind <- 1 to allIterators.size;
@@ -136,6 +136,9 @@ class LazyRoundRobbin[T](val initStreams: Seq[IntegerWeightStreamable[T]])
 object LazyRoundRobbin {
 	def apply[T](initStreams: Seq[IntegerWeightStreamable[T]]) =
 	  new LazyRoundRobbin(initStreams)
+	
+	def memoized[T](initStreams: Seq[IntegerWeightStreamable[T]]) =
+    new LazyRoundRobbin(initStreams) with Memoized[T]
 	
 	def counted[T](initStreams: Seq[IntegerWeightStreamable[T]]) =
     new LazyRoundRobbin(initStreams) with OrderedCountable[T]

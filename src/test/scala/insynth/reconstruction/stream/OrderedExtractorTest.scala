@@ -37,39 +37,39 @@ class OrderedExtractorTest extends JUnitSuite {
     }
   }
   
-  @Test
-  def treeIntToIntRec: Unit = {
-    
-    val intermediateTree = exampleIntToInt
-            
-    def confirmResults(num: Int) = {
-	    val extractorResults = assertTake(extractor(intermediateTree), num)   
-	    assertEquals(num, extractorResults.size)
-	    
-	    for ( ((node, _), lambdaNode) <- extractorResults zip constructIntToIntIntermediateFirstLambda(num))		  
-		    assertEquals(node, lambdaNode)	    
-    }
-    
-    for (ind <- 1 to 5) confirmResults(ind)    
-  }
-    
-  @Test
-  def treeIntAndBoolToIntIntermediate = {
-    val intermediateTree = exampleIntToIntBoth
-            
-    def confirmResults(num: Int) = {
-      // take two times this number of elements because we have two roots of recursion
-      // take two times more to be sure that extractor extracts needed trees (node the non-determinism)
-	    val extractorResults = assertTake(extractor(intermediateTree), (num * 2 * 2)) map { _._1 }	    
-	    assertEquals(num * 4, extractorResults.size)
-	    	  
-	    val message = "Extracted " + extractorResults.zipWithIndex.map(p => p._2 + ": " + p._1).mkString("\n")
-	    
-	    for (node <- constructIntAndBoolToIntIntermediateLambda(num))
-	    	assertTrue(node + " is not extracted.\n" + message, extractorResults contains node)	    
-    }
-    
-    for (ind <- 1 to 5) confirmResults(ind)    
-  }
+//  @Test
+//  def treeIntToIntRec: Unit = {
+//    
+//    val intermediateTree = exampleIntToInt
+//            
+//    def confirmResults(num: Int) = {
+//	    val extractorResults = assertTake(extractor(intermediateTree), num)   
+//	    assertEquals(num, extractorResults.size)
+//	    
+//	    for ( ((node, _), lambdaNode) <- extractorResults zip constructIntToIntIntermediateFirstLambda(num))		  
+//		    assertEquals(node, lambdaNode)	    
+//    }
+//    
+//    for (ind <- 1 to 5) confirmResults(ind)    
+//  }
+//    
+//  @Test
+//  def treeIntAndBoolToIntIntermediate = {
+//    val intermediateTree = exampleIntToIntBoth
+//            
+//    def confirmResults(num: Int) = {
+//      // take two times this number of elements because we have two roots of recursion
+//      // take two times more to be sure that extractor extracts needed trees (node the non-determinism)
+//	    val extractorResults = assertTake(extractor(intermediateTree), (num * 2 * 2)) map { _._1 }	    
+//	    assertEquals(num * 4, extractorResults.size)
+//	    	  
+//	    val message = "Extracted " + extractorResults.zipWithIndex.map(p => p._2 + ": " + p._1).mkString("\n")
+//	    
+//	    for (node <- constructIntAndBoolToIntIntermediateLambda(num))
+//	    	assertTrue(node + " is not extracted.\n" + message, extractorResults contains node)	    
+//    }
+//    
+//    for (ind <- 1 to 5) confirmResults(ind)    
+//  }
 
 }

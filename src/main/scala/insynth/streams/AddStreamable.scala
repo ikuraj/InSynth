@@ -20,7 +20,7 @@ trait AddStreamable[+T] {
   // NOTE: the streamable is initialized once the getStream method is called
   def isInitialized: Boolean
   
-//  def initialize: Unit
+  def initialize: Unit
   
   def getStreamables: List[Streamable[T]]
 }

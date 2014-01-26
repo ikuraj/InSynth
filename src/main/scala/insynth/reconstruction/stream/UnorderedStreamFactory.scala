@@ -18,7 +18,7 @@ class UnorderedStreamFactory[T] extends StreamFactory[T] {
     SingleStream(array.toStream map (_._1), false)
   
   override def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X=>Y, modifyVal: Int => Int) =
-    throw new UnsupportedOperationException
+    UnaryStream(streamable, modify)
         
   override def makeUnaryStream[X, Y <: T](streamable: Streamable[X], modify: X=>Y) =
     UnaryStream(streamable, modify)
@@ -43,5 +43,7 @@ class UnorderedStreamFactory[T] extends StreamFactory[T] {
         
   def getFinalStream(streamable: Streamable[T]) =
     streamable.getStream zip Stream.continually(0f)
+  
+  override def memoized = throw new RuntimeException
   
 }

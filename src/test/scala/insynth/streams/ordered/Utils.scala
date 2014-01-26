@@ -1,16 +1,18 @@
 package insynth.streams.ordered
 
+import org.scalatest.matchers._
+
 import insynth.streams._
 
-object Utils {
+object Utils extends ShouldMatchers {
   
   def compareCallsToGetStream[T](s: IntegerWeightStreamable[T], maxCalls: Int = 20) {
     val s1 = s.getValuedStream
     val s2 = s.getValuedStream
     
     for (ind <- 1 to maxCalls; toTake = 50 * ind) {
-      assert ( s1.take(toTake) == s2.take(toTake) )
-      assert ( s1.take(toTake) == s.getValuedStream.take(toTake) )
+      s1.take(toTake) should equal ( s2.take(toTake) )
+      s1.take(toTake) should equal ( s.getValuedStream.take(toTake) )
     }
   }
   

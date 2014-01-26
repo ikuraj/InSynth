@@ -1,4 +1,5 @@
-package insynth.streams.ordered
+package insynth.streams
+package ordered
 
 import scala.collection.mutable
 
@@ -7,9 +8,13 @@ import insynth.streams.ordered.{ IntegerWeightStreamable => Streamable }
 import insynth.streams.unordered.{ RoundRobbin => UnRoundRobbin }
 
 class RoundRobbin[T] protected[streams] (val streams: Seq[IntegerWeightStreamable[T]])
-	extends InnerRoundRobbin[T]( streams.map(_.getValuedStream.iterator) )
-	with Streamable[T] with HasLogger {
+	extends
+//	InnerRoundRobbin[T]( streams.map(_.getValuedStream.iterator) ) with
+	Streamable[T] with HasLogger {
   
+  def getValuedStream =
+    new InnerRoundRobbin( streams.map(_.getValuedStream.iterator) ).getValuedStream
+    
   override def size =
     if (streams.exists(_.size == -1)) -1
     else streams.map(_.size).sum
@@ -78,5 +83,9 @@ object RoundRobbin {
     // OPTIMIZATION: if streams have more than 3 elements, use PriorityQueue
     assert (streams.size < 10)
     new RoundRobbin(streams)
+  }
+
+  def memoized[T](streams: => Seq[IntegerWeightStreamable[T]]) = {
+    new RoundRobbin(streams) with Memoized[T]
   }
 }

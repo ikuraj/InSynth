@@ -32,4 +32,6 @@ trait StreamFactory[T] {
   
   def getFinalStream(streamable: Streamable[T]): Stream[(T, Float)]
   
+  def memoized: StreamFactory[T]
+  
 }

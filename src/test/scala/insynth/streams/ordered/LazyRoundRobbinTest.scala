@@ -43,7 +43,7 @@ class LazyRoundRobbinTest extends JUnitSuite {
 //    val innerStream = (1, 1) #:: lazyPair #:: Stream[(Int, Int)]()
     
     val stream1 = getSingleStream(0)
-    val stream2 = RoundRobbin(IndexedSeq(Singleton[Int](throw new RuntimeException)))
+    val stream2 = RoundRobbin(IndexedSeq(Singleton[Int]((throw new RuntimeException): Int)))
     
     val lrr = LazyRoundRobbin(List(stream1))
 

@@ -20,5 +20,14 @@ class FiniteStream[T](coll: => Seq[(T, Int)])
 
 object FiniteStream {
   def apply[T](stream: => Seq[(T, Int)]) =
-    new FiniteStream(stream)
+//    if (stream.size == 1)
+//      new Singleton[T](stream.head._1, stream.head._2)
+//    else
+    	new FiniteStream(stream)
+  
+  def counted[T](stream: => Seq[(T, Int)]) =
+    if (stream.size == 1)
+      new Singleton[T](stream.head) with OrderedCountable[T]
+    else
+    	new FiniteStream(stream) with OrderedCountable[T]
 }

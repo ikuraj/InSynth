@@ -8,6 +8,7 @@ import Document._
 import scala.text.DocNil
 
 trait Formatable {
+
   def toDocument: Document
 
   def println() = {
@@ -58,6 +59,7 @@ object FormatHelpers {
   def foldDoc(docs: List[Document], sep: Document): Document = docs match {
     case Nil => empty
     case d :: Nil => d
+    case d :: DocNil :: Nil => d
     case d :: ds => d :: sep :/: foldDoc(ds, sep)
     case d => throw new RuntimeException("asd" + d)
   }
@@ -73,4 +75,5 @@ object FormatHelpers {
 
   implicit def strToDoc(s: String): Document = text(s)
   implicit def intToDoc(i: Int): Document = text(i.toString)
+  
 }

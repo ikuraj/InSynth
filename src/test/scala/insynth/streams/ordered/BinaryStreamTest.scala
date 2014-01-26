@@ -34,6 +34,8 @@ class BinaryStreamTest extends JUnitSuite {
     assertFalse(stream.isEmpty)
     assertEquals(2, stream.head)
     assertEquals(3, bs.getValues.head)
+    
+    compareCallsToGetStream(bs)
   }
   
   @Test
@@ -49,6 +51,8 @@ class BinaryStreamTest extends JUnitSuite {
     
     assertEquals(2, stream.head)
     assertEquals(2, bs.getValues.head)
+    
+    compareCallsToGetStream(bs)
   }
       
   trait Combination
@@ -75,6 +79,8 @@ class BinaryStreamTest extends JUnitSuite {
 //		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
+    
+        compareCallsToGetStream(bs)
 		    
 		    val resultList = List(List(1,2), List(1,5), List(4,2), List(1,6), List(6,2), List(4,5), List(4,6), List(6,5), List(6,6))
 		    
@@ -109,6 +115,8 @@ class BinaryStreamTest extends JUnitSuite {
 	        	{ x => NumberList(x map { Number(_) }) } zip resultValueList,
 	        bs.getStream zip bs.getValues
 	      )
+    
+	      compareCallsToGetStream(bs)
 	    }
 	    
     }
@@ -136,6 +144,8 @@ class BinaryStreamTest extends JUnitSuite {
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
+    
+        compareCallsToGetStream(bs)
 		    
 		    val stream = bs.getStream
 		    val streamString = stream.take(10).toList mkString (", ")
@@ -158,6 +168,8 @@ class BinaryStreamTest extends JUnitSuite {
 	        	{ x => NumberList(x map { Number(_) }) } zip Stream.continually(randomInt1 + randomInt2).take(10),
 	        currentStream.take(10) zip bs.getValues.take(10)
 	      )
+    
+        compareCallsToGetStream(bs)
 	    }
 	    
     }    
@@ -190,6 +202,8 @@ class BinaryStreamTest extends JUnitSuite {
 		      case (x: NumberList, y: Number) => NumberList(x.list :+ y)	      
 		      case (x: Number, y: Number) => NumberList(List(x, y))
 	      }
+    
+        compareCallsToGetStream(bs)
 		    
 		    val stream = bs.getStream
 		    val streamString = stream.take(10).toList mkString (", ")
@@ -215,6 +229,8 @@ class BinaryStreamTest extends JUnitSuite {
 		      )
 		      ind += 147
 	      }
+    
+        compareCallsToGetStream(bs)
 	    }
 	    
     }    
@@ -267,6 +283,8 @@ class BinaryStreamTest extends JUnitSuite {
 		      )
 		      ind += 147
 	      }
+    
+        compareCallsToGetStream(bs)
       }
 	    
     }    

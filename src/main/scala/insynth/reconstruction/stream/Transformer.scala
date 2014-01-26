@@ -539,7 +539,7 @@ class Transformer(streamBuilder: StreamFactory[Node])
       assert(!paramInitStream.isInitialized, "!paramInitStream.isInitialized")
       
       // initialize the lazy round robbin
-//      paramInitStream.initialize
+      paramInitStream.initialize
     }
   }
 

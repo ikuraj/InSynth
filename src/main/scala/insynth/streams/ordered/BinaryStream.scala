@@ -1,4 +1,5 @@
-package insynth.streams.ordered
+package insynth.streams
+package ordered
 
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, MutableList }
@@ -20,11 +21,21 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
     if (s1.size <= -1 || s2.size <= -1) -1
     else s1.size + s2.size
     
-  override def getValuedStream = 
+  override def getValuedStream = {
     new InnerBinaryStream getValuedStream
+  }
+	  
+  def combineTwoValues( v1: ValuePairLeft, v2: ValuePairRight ) =
+    ( combine(v1._1, v2._1), v1._2 + v2._2 )
+	  
+  def combineTwoValuesRight( v1: T, w1: Int, v2: ValuePairRight ) =
+    ( combine(v1, v2._1), w1 + v2._2 )
+	  
+  def combineTwoValuesLeft( v1: ValuePairLeft, v2: V, w2: Int ) =
+    ( combine(v1._1, v2), v1._2 + w2 )
 
 	class InnerBinaryStream extends HasLogger {
-  
+      
 	  def getValuedStream = {
 	    // picks next element from all "active" iterators according to weight 
 	    // NOTE: index to ensure fairness in choosing the next value
@@ -58,7 +69,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	      getNext(0)
 	    }
 	  }
-      
+	  
 	  /**
 	   * Returns index of the iterator with minimal weight
 	   * NOTE: fairness is guaranteed by keeping track of which iterator was forwarded previously
@@ -67,7 +78,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	   */
 	  private def getNext(lastIndex: Int): Stream[ValuePairOut] = {
 	    entering("getNext", lastIndex)
-	        
+	    
 	    // at the end -1 means no next element was found
 	    var minValue = Int.MaxValue
 	    var result = Stream[ValuePairOut]()
@@ -75,6 +86,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	    // add all pending iterators
 	    iterators appendAll iteratorsToBeAdded
 	    iteratorsToBeAdded = MutableList.empty
+	    info( "iterators.size = " + iterators.size )
 	    
 	    fine("iterators = " + iterators.zipWithIndex.filter(_._1.hasNext).
 	      map(p => p._2 + ":" + p._1.head).mkString(", "))
@@ -99,9 +111,6 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	    exiting("getNext", result)
 	  }
 	  
-	  def combineTwoValues( v1: ValuePairLeft, v2: ValuePairRight ) =
-	    ( combine(v1._1, v2._1), v1._2 + v2._2 )
-	  
 	  /** Stream that streams over combinations of two streams with indexes ind1, ind2 such that
 	   *  ind2 >= ind1 at all times and ind1 is fixed 
 	   * 	It can add a new iterator with left index equal to ind1 + 1 if it has next lowest
@@ -114,13 +123,13 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	    val leftPair@(leftElem, leftWeight) = s1.head
 	    val rightPair@(rightElem, rightWeight) = s2.head
 	      
-	    val producePartial: ValuePairRight => ValuePairOut =
-	      combineTwoValues(leftPair, _)
+//	    val producePartial: ValuePairRight => ValuePairOut =
+//	      combineTwoValues(leftPair, _)
 	
 	    ( combine(leftElem, rightElem), leftWeight + rightWeight ) #:: {
 	      if (!s1.tail.isEmpty && !s2.tail.isEmpty)
 	      	iteratorsToBeAdded += leftStream(ind + 1, s1.tail, s2.tail).iterator.buffered
-	    	s2.tail map producePartial
+	    	s2.tail map { p => combineTwoValuesRight(leftElem, leftWeight, p) }
 	    }
 	  }
 	  
@@ -136,13 +145,13 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 	    val rightPair@(rightElem, rightWeight) = s2.head
 	    val (leftElemHead, leftWeightHead) = s1.head
 	
-	    val producePartial: ValuePairLeft => ValuePairOut =
-	      combineTwoValues(_, rightPair)
+//	    val producePartial: ValuePairLeft => ValuePairOut =
+//	      combineTwoValues(_, rightPair)
 	
 	    ( combine(leftElemHead, rightElem), leftWeightHead + rightWeight ) #:: {
 	      if (!s1.tail.isEmpty && !s2.tail.isEmpty)
 	      	iteratorsToBeAdded += rightStream(ind + 1, s1.tail, s2.tail).iterator.buffered
-	    	s1.tail map producePartial
+	    	s1.tail map  { p => combineTwoValuesLeft(p, rightElem, rightWeight) }
 	    }
 	  }
 	
@@ -173,4 +182,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
 object BinaryStream {
 	def apply[T, V, U](s1: Streamable[T], s2: Streamable[V])(combine: (T, V) => U) =
 	  new BinaryStream(s1, s2)(combine)
+
+	def memoized[T, V, U](s1: Streamable[T], s2: Streamable[V])(combine: (T, V) => U) =
+	  new BinaryStream(s1, s2)(combine) with Memoized[U]
 }
