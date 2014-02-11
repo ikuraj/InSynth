@@ -2,17 +2,16 @@ package insynth.streams
 package dependent
 
 import scala.collection.mutable.{ ArrayBuffer, MutableList }
-
 import insynth.util.logging._
-
 import scala.language.postfixOps
 import scala.annotation._
+import insynth.streams.light.Finite
 
-case class Binary[I, O]
-  (s1: light.Finite[I], s2: FiniteDependent[I, O])
+case class BinaryFinite[I, O]
+  (s1: light.Finite[I], s2: Dependent[I, O])
   extends light.Finite[O] with HasLogger {
   
-  val rr = light.RoundRobbinFinite.fixed(
+  val rr = light.RoundRobbinFinite.fixed[O](
     Array((0 to s1.size).map(ind => s2.getStream(s1(ind))): _*)
   )
   
@@ -23,16 +22,48 @@ case class Binary[I, O]
   
 }
 
+class BinaryFiniteChain[I, I2, O]
+  (s1: light.Finite[I], s2: Dependent[I2, O])(chain: I => I2)
+  extends light.Finite[O] with HasLogger {
+  
+  val rr = light.RoundRobbinFinite.fixed[O](
+    Array((0 until s1.size).map(ind => s2.getStream( chain(s1(ind)) )): _*)
+  )
+  
+  override def size = rr.size
+  
+  override def apply(ind: Int) =
+    rr(ind)
+  
+}
+
 // NOTE this only works if all dependent streams are finite
-case class FiniteBinary[I, I1, O]
-  (s1: FiniteDependent[I, I1], s2: FiniteDependent[I1, O])
+case class Binary[I, I1, O]
+  (s1: Dependent[I, I1], s2: Dependent[I1, O])
   extends Dependent[I, O] {
   
   def getStream(parameter: I) =
-    forLeftStream(s1.getStream(parameter))
+    BinaryFinite(s1.getStream(parameter), s2)
     
-  def forLeftStream(s: light.Finite[I1]): light.Finite[O] = 
-    Binary(s, s2)
+}
+
+object BinaryFinite {
+  
+  def apply[I, O](s1: light.Enumerable[I], s2: Dependent[I, O]) = {
+    s1 match {
+      case f: light.Finite[I] =>
+        new BinaryFinite(f, s2)
+      case _ => throw new RuntimeException
+    }    
+  }
+  
+  def chain[I, I2, O](s1: light.Enumerable[I], s2: Dependent[I2, O])(chain: I => I2) = {
+    s1 match {
+      case f: light.Finite[I] =>
+        new BinaryFiniteChain(f, s2)(chain)
+      case _ => throw new RuntimeException
+    }    
+  }
   
 }
 

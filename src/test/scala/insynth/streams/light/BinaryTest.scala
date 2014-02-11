@@ -12,6 +12,8 @@ class BinaryTest extends FunSuite with ShouldMatchers {
       WrapperArray(4, 5, 6)
     )((_, _))
     
+    bs.size should be (9)
+
     val res =
 		  (0 until 9).map(
 		    bs(_)

@@ -12,30 +12,30 @@ import common._
 
 class BinaryTest extends FunSuite with Matchers {
 
-  test("sorted lists") {
-    
-    val maxLength = 10
-    
-    val intProducer = Producer.finite(
-      { (v: Int) => e.Singleton(v) }
-    )
-    
-    var getList: Int => e.Finite[List[Int]] = null
-    
-    val listChooser: FiniteDependent[Int, List[Int]] = Producer.finite(
-       { (v: Int) =>
-   			v match {
-   			  case 0 => e.Singleton(List[Int]())
-   			  case _ => e.Binary( e.Singleton(v), getList(v - 1) )( _ :: _ )
-   			}
-       }
-    )
-    
-    getList = (v: Int) => listChooser.getStream(v)
-    
-    val enum = listChooser.getStream(5)
-    
-    enum.size should be (1)
-  }
-  
+//  test("sorted lists") {
+//    
+//    val maxLength = 10
+//    
+//    val intProducer = Producer.finite(
+//      { (v: Int) => e.Singleton(v) }
+//    )
+//    
+//    var getList: Int => e.Finite[List[Int]] = null
+//    
+//    val listChooser: FiniteDependent[Int, List[Int]] = Producer.finite(
+//       { (v: Int) =>
+//   			v match {
+//   			  case 0 => e.Singleton(List[Int]())
+//   			  case _ => e.Binary( e.Singleton(v), getList(v - 1) )( _ :: _ )
+//   			}
+//       }
+//    )
+//    
+//    getList = (v: Int) => listChooser.getStream(v)
+//    
+//    val enum = listChooser.getStream(5)
+//    
+//    enum.size should be (1)
+//  }
+
 }

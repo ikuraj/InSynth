@@ -59,10 +59,11 @@ class RoundRobbinFiniteFixed[@specialized T] protected[streams] (val streams: Ar
       }
     (ab ++ tail).toArray
   }
-  fine("limits = " + limits)
 
-  override def size = 
-    limits.apply(length-1)
+  override def size = {
+    fine("limits = " + limits.mkString(","))
+    limits.apply(length)
+  }
   
   override def enum(ind: Int) = streams(ind)
   
