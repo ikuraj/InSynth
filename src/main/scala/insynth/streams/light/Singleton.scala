@@ -1,6 +1,6 @@
 package insynth.streams.light
 
-class Singleton[T](el: T) extends Enumerable[T] {
+class Singleton[T](el: T) extends Finite[T] {
   
   override def size = 1
   

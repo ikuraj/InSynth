@@ -8,7 +8,7 @@ import insynth.util.logging._
 import scala.language.postfixOps
 import scala.annotation._
 
-case class BinaryEnumerable[I, O]
+case class Binary[I, O]
   (s1: light.Finite[I], s2: FiniteDependent[I, O])
   extends light.Finite[O] with HasLogger {
   
@@ -24,20 +24,15 @@ case class BinaryEnumerable[I, O]
 }
 
 // NOTE this only works if all dependent streams are finite
-case class FiniteBinary[I, O1, I2, O2, O]
-  (s1: FiniteDependent[I, O1], s2: FiniteDependent[I2, O2])
-  (chain: O1 => I2) (combine: (O1, O2) => O) extends Dependent[I, O] {
+case class FiniteBinary[I, I1, O]
+  (s1: FiniteDependent[I, I1], s2: FiniteDependent[I1, O])
+  extends Dependent[I, O] {
   
   def getStream(parameter: I) =
     forLeftStream(s1.getStream(parameter))
     
-  def forLeftStream(s: Stream[O1]): Stream[O] = 
-    val rr = light.RoundRobbinFinite.fixed(
-      Array((0 to s1.size).map(ind => s2.getStream(s1(ind))): _*)
-    )
-    
-  def forLeftValue(v: O1) =
-    s2.getStream(chain(v)) map { combine(v, _) }
+  def forLeftStream(s: light.Finite[I1]): light.Finite[O] = 
+    Binary(s, s2)
   
 }
 
