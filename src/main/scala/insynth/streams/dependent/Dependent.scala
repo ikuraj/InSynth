@@ -9,6 +9,8 @@ trait Dependent[I, +O] {
   
 }
 
+// should return all finite/infinite enumerables
+
 trait FiniteDependent[I, +O] extends Dependent[I, O]
 
 trait InfiniteDependent[I, +O] extends Dependent[I, O]

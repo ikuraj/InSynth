@@ -19,6 +19,6 @@ object Producer {
     new Producer(producerFunction)
   
   def finite[I, O](producerFunction: I => Finite[O]) =
-    new Producer(producerFunction) with FiniteDependentStreamable[I, O]
+    new Producer(producerFunction) with FiniteDependent[I, O]
     
 }

@@ -12,9 +12,9 @@ trait Finite[+A] extends Enumerable[A] {
   
   self: Enumerable[A] =>
   
-  var _size: Int = self.size
-  
-  override def size = _size
+//  lazy val memoizedSize: Int = self.size
+//  
+//  override def size = memoizedSize
   
 }
 
