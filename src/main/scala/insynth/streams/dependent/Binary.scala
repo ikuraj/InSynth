@@ -37,6 +37,29 @@ class BinaryFiniteChain[I, I2, O]
   
 }
 
+class BinaryFiniteChainCombine[I, I2, O, R]
+  (s1: light.Finite[I], s2: Dependent[I2, O], chain: I => I2, combine: (I, O) => R)
+  extends light.Finite[R] with HasLogger {
+  
+  val rr = light.RoundRobbinFinite.fixed[R](
+    Array(
+      (0 until s1.size).map(ind =>
+        {
+          val leftProduced = s1(ind)
+        	light.Mapper( s2.getStream( chain(leftProduced) ),
+      	    { (rightProduced: O) => combine(leftProduced, rightProduced) })
+        }
+  		): _*
+		)
+  )
+  
+  override def size = rr.size
+  
+  override def apply(ind: Int) =
+    rr(ind)
+  
+}
+
 // NOTE this only works if all dependent streams are finite
 case class Binary[I, I1, O]
   (s1: Dependent[I, I1], s2: Dependent[I1, O])
@@ -61,6 +84,15 @@ object BinaryFinite {
     s1 match {
       case f: light.Finite[I] =>
         new BinaryFiniteChain(f, s2)(chain)
+      case _ => throw new RuntimeException
+    }    
+  }
+  
+  def chainCombined[I, I2, O, R](s1: light.Enumerable[I], s2: Dependent[I2, O],
+    chain: I => I2, combine: (I, O) => R) = {
+    s1 match {
+      case f: light.Finite[I] =>
+        new BinaryFiniteChainCombine(f, s2, chain, combine)
       case _ => throw new RuntimeException
     }    
   }

@@ -13,7 +13,7 @@ case class CoupledBinary[I, O1, O2, O]
     val left = s1.getStream(parameter)
     val right = s2.getStream(parameter)
     
-    light.Binary(left, right)(combine)    
+    light.Binary(left, right, combine)    
   }
   
 }
