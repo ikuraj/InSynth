@@ -83,4 +83,11 @@ class RoundRobbinTest extends FunSuite {
     
   }
   
+  test("RoundRobbin with empty array") {
+    val rr = RoundRobbinFinite.fixed[Int](Array(
+    ))
+    
+    rr.size should be (0)
+  }
+  
 }

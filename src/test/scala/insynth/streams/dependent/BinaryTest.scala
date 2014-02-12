@@ -11,6 +11,21 @@ import util.format._
 import common._
 
 class BinaryTest extends FunSuite with Matchers {
+  
+  test("empty binary") {
+    
+    val emptyProducer = Producer(
+      { (v: Int) => e.Empty }
+    )
+    
+    val array = e.WrapperArray( 1 to 100 )
+    
+    
+    val binary = BinaryFinite.apply(array, emptyProducer)
+    
+    binary.size should be (0)
+    
+  }
 
 //  test("sorted lists") {
 //    

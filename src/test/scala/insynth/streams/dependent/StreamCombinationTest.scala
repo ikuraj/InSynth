@@ -234,10 +234,13 @@ class StreamCombinationTest extends FunSuite with Matchers {
     		Node(Leaf, 1, Node(Node(Leaf, 2, Leaf), 3, Leaf))
       )
 
-      for (size <- 8 to 8) {
+      val startTime = System.currentTimeMillis
+      for (size <- 5 to 5) {
 	      res = trees.getStream(size, 1 to size)
 	      res.size should be (Catalan.catalan(size))
       }
+      val duration = System.currentTimeMillis - startTime
+      println("Got trees in %s".format(duration.toString))
       
     }
   }

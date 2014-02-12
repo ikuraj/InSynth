@@ -7,13 +7,19 @@ import scala.language.postfixOps
 import scala.annotation._
 import insynth.streams.light.Finite
 
-case class BinaryFinite[I, O]
+class BinaryFinite[I, O]
   (s1: light.Finite[I], s2: Dependent[I, O])
   extends light.Finite[O] with HasLogger {
   
-  val rr = light.RoundRobbinFinite.fixed[O](
-    Array((0 to s1.size).map(ind => s2.getStream(s1(ind))): _*)
-  )
+  val rr = { 
+    val rightStreams = 
+      for (ind <- 0 until s1.size; stream = s2.getStream(s1(ind)); if stream.size > 0 )
+        yield stream
+        
+    light.RoundRobbinFinite.fixed[O](
+      Array(rightStreams: _*)
+    )
+  }
   
   override def size = rr.size
   
@@ -26,9 +32,15 @@ class BinaryFiniteChain[I, I2, O]
   (s1: light.Finite[I], s2: Dependent[I2, O])(chain: I => I2)
   extends light.Finite[O] with HasLogger {
   
-  val rr = light.RoundRobbinFinite.fixed[O](
-    Array((0 until s1.size).map(ind => s2.getStream( chain(s1(ind)) )): _*)
-  )
+  val rr = { 
+    val rightStreams = 
+      for (ind <- 0 until s1.size; stream = s2.getStream( chain(s1(ind)) ); if stream.size > 0 )
+        yield stream
+        
+    light.RoundRobbinFinite.fixed[O](
+      Array(rightStreams: _*)
+    )
+  }
   
   override def size = rr.size
   
@@ -41,17 +53,17 @@ class BinaryFiniteChainCombine[I, I2, O, R]
   (s1: light.Finite[I], s2: Dependent[I2, O], chain: I => I2, combine: (I, O) => R)
   extends light.Finite[R] with HasLogger {
   
-  val rr = light.RoundRobbinFinite.fixed[R](
-    Array(
-      (0 until s1.size).map(ind =>
-        {
-          val leftProduced = s1(ind)
-        	light.Mapper( s2.getStream( chain(leftProduced) ),
-      	    { (rightProduced: O) => combine(leftProduced, rightProduced) })
+  val rr = {
+    val streams = 
+      for (ind <- 0 until s1.size; leftProduced = s1(ind); rightStream = s2.getStream( chain(leftProduced) );
+        if rightStream.size > 0 ) yield {
+          light.Mapper( rightStream, { (rightProduced: O) => combine(leftProduced, rightProduced) })
         }
-  		): _*
-		)
-  )
+
+    light.RoundRobbinFinite.fixed[R](  
+      Array(streams: _*)
+    )
+  }
   
   override def size = rr.size
   
