@@ -42,10 +42,14 @@ object Checks {
       try {
         val outcome = fun
         outcome match {
-          case Failed(e: org.scalatest.exceptions.ModifiableMessage[_]) if clue.toString != "" =>
-            Failed(e.modifyMessage(append)).asInstanceOf[T]
-          case Canceled(e: org.scalatest.exceptions.ModifiableMessage[_]) if clue.toString != "" =>
-            Canceled(e.modifyMessage(append)).asInstanceOf[T]
+          case Failed(e: org.scalatest.exceptions.ModifiableMessage[_]) =>
+            if (clue.toString != "")
+            	Failed(e.modifyMessage(append)).asInstanceOf[T]
+            else outcome
+          case Canceled(e: org.scalatest.exceptions.ModifiableMessage[_]) =>
+            if (clue.toString != "")
+            	Canceled(e.modifyMessage(append)).asInstanceOf[T]
+            else outcome
           case _ => outcome
         }
       } catch {

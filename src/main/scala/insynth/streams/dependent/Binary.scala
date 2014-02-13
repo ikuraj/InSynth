@@ -111,6 +111,35 @@ object BinaryFinite {
   
 }
 
+object BinaryFiniteMemoized {
+  
+  def apply[I, O](s1: light.Enumerable[I], s2: Dependent[I, O]) = {
+    s1 match {
+      case f: light.Finite[I] =>
+        new BinaryFinite(f, s2) with light.Memoized[O]
+      case _ => throw new RuntimeException
+    }    
+  }
+  
+  def chain[I, I2, O](s1: light.Enumerable[I], s2: Dependent[I2, O])(chain: I => I2) = {
+    s1 match {
+      case f: light.Finite[I] =>
+        new BinaryFiniteChain(f, s2)(chain) with light.Memoized[O]
+      case _ => throw new RuntimeException
+    }    
+  }
+  
+  def chainCombined[I, I2, O, R](s1: light.Enumerable[I], s2: Dependent[I2, O],
+    chain: I => I2, combine: (I, O) => R) = {
+    s1 match {
+      case f: light.Finite[I] =>
+        new BinaryFiniteChainCombine(f, s2, chain, combine) with light.Memoized[R]
+      case _ => throw new RuntimeException
+    }    
+  }
+  
+}
+
 //case class Binary[I, O1, I2, O2, O]
 //  (s1: Dependent[I, O1], s2: Dependent[I2, O2])
 //  (chain: O1 => I2) (combine: (O1, O2) => O) extends Dependent[I, O] with HasLogger {

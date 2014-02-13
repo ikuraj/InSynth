@@ -37,5 +37,8 @@ object Producer {
   
   def map[I, O](producerMap: Map[I, Enumerable[O]] = Map.empty) =
     new Producer(producerMap)
+  
+  def memoized[I, O](producerFunction: I => Enumerable[O]) =
+    new Producer(producerFunction) with Memoized[I, O]
     
 }
