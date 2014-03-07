@@ -7,6 +7,7 @@ import scala.language.postfixOps
 import scala.annotation._
 import insynth.streams.light.Finite
 
+// TODO refactor ME
 class BinaryFinite[I, O]
   (s1: light.Finite[I], s2: Dependent[I, O])
   extends light.Finite[O] with HasLogger {
@@ -39,6 +40,29 @@ class BinaryFiniteChain[I, I2, O]
         
     light.RoundRobbinFinite.fixed[O](
       Array(rightStreams: _*)
+    )
+  }
+  
+  override def size = rr.size
+  
+  override def apply(ind: Int) =
+    rr(ind)
+  
+}
+
+class BinaryFiniteCombine[I, O, R]
+  (s1: light.Finite[I], s2: Dependent[I, O], combine: (I, O) => R)
+  extends light.Finite[R] with HasLogger {
+  
+  val rr = {
+    val streams = 
+      for (ind <- 0 until s1.size; leftProduced = s1(ind); rightStream = s2.getStream( leftProduced );
+        if rightStream.size > 0 ) yield {
+          light.Mapper( rightStream, { (rightProduced: O) => combine(leftProduced, rightProduced) })
+        }
+
+    light.RoundRobbinFinite.fixed[R](  
+      Array(streams: _*)
     )
   }
   
@@ -125,6 +149,14 @@ object BinaryFiniteMemoized {
     s1 match {
       case f: light.Finite[I] =>
         new BinaryFiniteChain(f, s2)(chain) with light.Memoized[O]
+      case _ => throw new RuntimeException
+    }    
+  }
+  
+  def combine[I, O, R](s1: light.Enumerable[I], s2: Dependent[I, O], combine: (I, O) => R) = {
+    s1 match {
+      case f: light.Finite[I] =>
+        new BinaryFiniteCombine(f, s2, combine) with light.Memoized[R]
       case _ => throw new RuntimeException
     }    
   }

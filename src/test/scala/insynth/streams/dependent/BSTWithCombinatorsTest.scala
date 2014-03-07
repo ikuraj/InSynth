@@ -49,7 +49,7 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with
           val roots = rootProducer.getStream(range)
           val leftSizes = sizeProducer.getStream(size)
           
-          val rootLeftSizePairs = e.Binary(roots, leftSizes)
+          val rootLeftSizePairs = e.Binary(leftSizes, roots)
           
 //          val forBothTreesPairs = e.Mapper(rootLeftSizePairs, { (p: (Int, Int)) =>
 //            val (root, leftSize) = p
@@ -60,13 +60,13 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with
 //          })
           
           val leftTrees = new InMapper(getTreeOfSize, { (par: (Int, Int)) =>
-            val (leftSize, root) = par
-            (leftSize - 1, range.start to root)
+            val (leftSize, median) = par
+            (leftSize - 1, range.start to median)
           })
           
           val rightTrees = new InMapper(getTreeOfSize, { (par: (Int, Int)) =>
-            val (leftSize, root) = par
-            (size - leftSize - 1, (root + 1) to range.end)
+            val (leftSize, median) = par
+            (size - leftSize - 1, (median + 1) to range.end)
           })
           
           val leftRightPairs = BinaryPairs(leftTrees, rightTrees)
@@ -74,10 +74,10 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with
           import BinaryFiniteMemoized._
           
           val allCombined =
-	      		chainCombined(forBothTreesPairs, leftRightPairs,
-	    		    (mid: Int) => (size - 1, range.start to (mid - 1)),
-	    		    (currRoot: Int, leftPair: (Tree, Int)) => {
-	    		      val (leftTree: Tree, leftSize: Int) = leftPair
+	      		combine(rootLeftSizePairs, leftRightPairs,
+//	    		    (leftSize: Int, mid: Int) => (size - 1, range.start to (mid - 1)),
+	    		    (arg: ((Int, Int), (Tree, Tree)) => {
+	    		      val ((s, m), (l, r)) = arg
 	    		      assert( !(leftSize > 0 && leftTree == Leaf), "leftSize=%d, leftTree=Leaf".format(leftSize))
 	    		      ( leftTree, leftSize, currRoot )
 	    		    }
