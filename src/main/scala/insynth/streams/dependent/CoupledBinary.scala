@@ -17,3 +17,17 @@ case class CoupledBinary[I, O1, O2, O]
   }
   
 }
+
+case class BinaryPairs[I1, O1, I2, O2]
+	(s1: Dependent[I1, O1], s2: Dependent[I2, O2])
+	extends Dependent[(I1, I2), (O1, O2)] with HasLogger {
+  
+  def getStream(parameter: (I1, I2)) = {
+    val (i1, i2) = parameter
+    val left = s1.getStream(i1)
+    val right = s2.getStream(i2)
+    
+    light.Binary(left, right)    
+  }
+  
+}

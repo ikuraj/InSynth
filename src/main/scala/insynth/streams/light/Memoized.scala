@@ -18,7 +18,7 @@ trait Memoized[T] extends Enumerable[T] with HasLogger {
     else {
       val nextValue = super.apply(ind)
       memoizedFlags += ind
-      memoizedValues.appendAll( List.make(ind - memoizedValues.size + 1, nextValue) )
+      memoizedValues.appendAll( List.fill(ind - memoizedValues.size + 1)(nextValue) )
 //      memoizedValues(ind) = nextValue
       nextValue
     }
