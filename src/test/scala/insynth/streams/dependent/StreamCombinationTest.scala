@@ -342,6 +342,8 @@ class StreamCombinationTest extends FunSuite with Matchers with
     }
     import OMG._
     
+    val profileRange = 10 to 10
+    
     withLazyClue("Elements are: " + clue) {
       for (size <- 1 to 3) {
 	      res = trees.getStream((size, Range(size, size - 1)))
@@ -380,7 +382,7 @@ class StreamCombinationTest extends FunSuite with Matchers with
     		Node(Leaf, 1, Node(Node(Leaf, 2, Leaf), 3, Leaf))
       )
 
-      for (size <- 10 to 10) {
+      for (size <- profileRange) {
 	      profile("Getting stream for BST of size %d".format(size)) {
 	      	res = trees.getStream(size, 1 to size)
 	      }

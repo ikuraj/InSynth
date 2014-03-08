@@ -30,17 +30,16 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with
     
     val sizeProducer = Producer[Int, Int](
       (size: Int) => {
-        e.WrapperArray( 0 to size )
+        e.WrapperArray( 0 until size )
       }
     )
     
     var getTreeOfSize: Dependent[ (Int, Range), Tree ] = null
-    var getTreeOfSizes: Dependent[ (Int, Range), (Tree, Int) ] = null
     
     val treesOfSize: Dependent[ (Int, Range), Tree ] = Producer.memoized(
       ( pair: (Int, Range) ) => {
         val (size, range) = pair
-        assert(size >= 0)
+        assert(size >= 0, "size=%d, range=%s" format (size, range))
 
         // do not care about the range, size is important (rangeProduced can return Empty)
         if (size <= 0) e.Singleton( Leaf )
@@ -59,51 +58,41 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with
 //            )
 //          })
           
-          val leftTrees = new InMapper(getTreeOfSize, { (par: (Int, Int)) =>
+          val leftTrees: Dependent[(Int, Int), Tree] = new InMapper(getTreeOfSize, { (par: (Int, Int)) =>
             val (leftSize, median) = par
-            (leftSize - 1, range.start to median)
+            (leftSize, range.start to (median - 1))
           })
           
-          val rightTrees = new InMapper(getTreeOfSize, { (par: (Int, Int)) =>
-            val (leftSize, median) = par
-            (size - leftSize - 1, (median + 1) to range.end)
-          })
+          val rightTrees: Dependent[(Int, Int), Tree] =
+            new InMapper(getTreeOfSize, { (par: (Int, Int)) =>
+	            val (leftSize, median) = par
+	            (size - leftSize - 1, (median + 1) to range.end)
+	          })
           
-          val leftRightPairs = BinaryPairs(leftTrees, rightTrees)
+          val leftRightPairs: Dependent[(Int, Int), (Tree, Tree)] =
+            CoupledBinary(leftTrees, rightTrees)
           
           import BinaryFiniteMemoized._
           
-          val allCombined =
-	      		combine(rootLeftSizePairs, leftRightPairs,
+          val allNodes =
+	      		combine[(Int, Int), (Tree, Tree), Node](rootLeftSizePairs, leftRightPairs,
 //	    		    (leftSize: Int, mid: Int) => (size - 1, range.start to (mid - 1)),
-	    		    (arg: ((Int, Int), (Tree, Tree)) => {
-	    		      val ((s, m), (l, r)) = arg
+	    		    (p1: (Int, Int), p2: (Tree, Tree)) => {
+	    		      val ((leftSize, currRoot), (leftTree, rightTree)) = (p1, p2)
+
+		      			assert( ! (size >= 2 && leftSize == 0 && size - leftSize - 1 == 0) )
+		      			assert( ! (size >= 2 && leftTree == Leaf && rightTree == Leaf ) )
 	    		      assert( !(leftSize > 0 && leftTree == Leaf), "leftSize=%d, leftTree=Leaf".format(leftSize))
-	    		      ( leftTree, leftSize, currRoot )
+	    		      Node( leftTree, currRoot, rightTree )
 	    		    }
 	  		    )
           
-      		chainCombined(leftTrees, getTreeOfSize,
-    		    (tuple: (Tree, Int, Int)) => {
-    		      val (_, leftSize, root) = tuple
-    		      assert( ! (size >= 2 && leftSize == 0 && size - leftSize - 1 == 0) )
-    		      (size - leftSize - 1, (root + 1) to range.end)
-    		    },
-    		    (leftTuple: (Tree, Int, Int), rightTree: Tree) => {
-    		      val (leftTree, _, root) = leftTuple
-    		      
-    		      assert( ! (size >= 2 && leftTree == Leaf && rightTree == Leaf ),
-  		          "leftSize=%d (Leaf), rightSize=%d (Leaf)"
-    		          .format(leftTuple._2, size - leftTuple._2 - 1) )
-    		      Node(leftTree, root, rightTree)
-    		    }
-  		    )
+  		    allNodes
         }
       }
     )
     
     getTreeOfSize = treesOfSize
-    getTreeOfSizes = treesUpToSize
     
     val trees = treesOfSize
     
@@ -118,6 +107,8 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with
 	    def clue = (0 until res.size).map(res(_)).mkString(",")
     }
     import OMG._
+    
+    val profileRange = 10 to 10
     
     withLazyClue("Elements are: " + clue) {
       for (size <- 1 to 3) {
@@ -157,7 +148,7 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with
     		Node(Leaf, 1, Node(Node(Leaf, 2, Leaf), 3, Leaf))
       )
 
-      for (size <- 10 to 10) {
+      for (size <- profileRange) {
 	      profile("Getting stream for BST of size %d".format(size)) {
 	      	res = trees.getStream(size, 1 to size)
 	      }
