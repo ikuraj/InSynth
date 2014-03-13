@@ -2,7 +2,7 @@ package insynth.streams
 
 import scala.collection.mutable.MutableList
 
-class MemoizationScope {
+class MemoizationScope extends Serializable {
   
   val memoizations = MutableList[Memoizable]()
   

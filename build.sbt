@@ -41,4 +41,10 @@ libraryDependencies ++= Seq(
 )
 
 // micro-benchmarks
-libraryDependencies += "com.google.caliper" % "caliper" % "1.0-beta-1"
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+libraryDependencies += "com.github.axel22" %% "scalameter" % "0.5-SNAPSHOT" % "test"
+
+testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
+
+parallelExecution in Test := false
