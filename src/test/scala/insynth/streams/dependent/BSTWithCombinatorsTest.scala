@@ -32,45 +32,45 @@ class BSTWithCombinatorsTest extends FunSuite with Matchers with GeneratorDriven
     }
     import OMG._
     
-    val profileRange = 10 to 10
+    val profileRange = 9 to 9
     
     withLazyClue("Elements are: " + clue) {
-      for (size <- 1 to 3) {
-        res = trees.getStream((size, Range(size, size - 1)))
-        res.size should be (0)
-        elements should be ('empty)
-        
-        res = trees.getStream((0, 1 to size))
-        res(0) should be (Leaf)
-        res.size should be (1)
-      }
-
-      res = trees.getStream(1, 1 to 3)
-      res.size should be (3)
-      elements should contain theSameElementsAs (1 to 3).map(
-        Node(Leaf, _, Leaf)
-      )
-
-      res = trees.getStream(2, 1 to 2)
-      res.size should be (2)
-      elements should contain allOf (
-        Node(Leaf, 1, Node(Leaf, 2, Leaf)),
-        Node(Node(Leaf, 1, Leaf), 2, Leaf)
-      )
-
-      res = trees.getStream(3, 1 to 3)
-      res.size should be (5)
-      elements should contain allOf (
-        Node(Node(Leaf, 1, Leaf), 2, Node(Leaf, 3, Leaf)),
-        Node(Leaf, 1, Node(Node(Leaf, 2, Leaf), 3, Leaf))
-      )
-
-      res = trees.getStream(3, 1 to 4)
-      res.size should be (5 * Binomial.binomialCoefficient(4, 3))
-      elements should contain allOf (
-        Node(Node(Leaf, 1, Leaf), 2, Node(Leaf, 3, Leaf)),
-        Node(Leaf, 1, Node(Node(Leaf, 2, Leaf), 3, Leaf))
-      )
+//      for (size <- 1 to 3) {
+//        res = trees.getStream((size, Range(size, size - 1)))
+//        res.size should be (0)
+//        elements should be ('empty)
+//        
+//        res = trees.getStream((0, 1 to size))
+//        res(0) should be (Leaf)
+//        res.size should be (1)
+//      }
+//
+//      res = trees.getStream(1, 1 to 3)
+//      res.size should be (3)
+//      elements should contain theSameElementsAs (1 to 3).map(
+//        Node(Leaf, _, Leaf)
+//      )
+//
+//      res = trees.getStream(2, 1 to 2)
+//      res.size should be (2)
+//      elements should contain allOf (
+//        Node(Leaf, 1, Node(Leaf, 2, Leaf)),
+//        Node(Node(Leaf, 1, Leaf), 2, Leaf)
+//      )
+//
+//      res = trees.getStream(3, 1 to 3)
+//      res.size should be (5)
+//      elements should contain allOf (
+//        Node(Node(Leaf, 1, Leaf), 2, Node(Leaf, 3, Leaf)),
+//        Node(Leaf, 1, Node(Node(Leaf, 2, Leaf), 3, Leaf))
+//      )
+//
+//      res = trees.getStream(3, 1 to 4)
+//      res.size should be (5 * Binomial.binomialCoefficient(4, 3))
+//      elements should contain allOf (
+//        Node(Node(Leaf, 1, Leaf), 2, Node(Leaf, 3, Leaf)),
+//        Node(Leaf, 1, Node(Node(Leaf, 2, Leaf), 3, Leaf))
+//      )
 
       for (size <- profileRange) {
         profile("Getting stream for BST of size %d".format(size)) {

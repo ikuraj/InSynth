@@ -24,21 +24,21 @@ class RedBlackTreesTest extends FunSuite with Matchers with GeneratorDrivenPrope
     var elements: Iterable[Tree] = null
     def clue = elements.mkString("\n")
     
-    val profileRange = 1 to 10
+    val profileRange = 9 to 9
     
     withLazyClue("Elements are: " + clue) {
       // specific cases
-      elements = trees.getStream( (3, 1 to 3, Set(true, false), 2) ).toList
-      elements.size should be (2)
-      elements = trees.getStream( (3, 1 to 3, Set(true, false), 3) ).toList
-      elements.size should be (1)
-
-      elements = trees.getStream( (1, 1 to 1, Set(true), 2) ).toList
-      elements.size should be (1)
-      elements = trees.getStream( (2, 1 to 2, Set(true), 2) ).toList
-      elements.size should be (2)
-      elements = trees.getStream( (4, 1 to 4, Set(true, false), 2) ).toList
-      elements.size should be (4)
+//      elements = trees.getStream( (3, 1 to 3, Set(true, false), 2) ).toList
+//      elements.size should be (2)
+//      elements = trees.getStream( (3, 1 to 3, Set(true, false), 3) ).toList
+//      elements.size should be (1)
+//
+//      elements = trees.getStream( (1, 1 to 1, Set(true), 2) ).toList
+//      elements.size should be (1)
+//      elements = trees.getStream( (2, 1 to 2, Set(true), 2) ).toList
+//      elements.size should be (2)
+//      elements = trees.getStream( (4, 1 to 4, Set(true, false), 2) ).toList
+//      elements.size should be (4)
 
       for (size <- profileRange) {
         info("Generating for size " + size)
@@ -48,11 +48,11 @@ class RedBlackTreesTest extends FunSuite with Matchers with GeneratorDrivenPrope
               ind <- 0 until enum.size) yield enum(ind)
         }
         
-        forAll( elements ) { invariant(_) should be (true) }
-
-        profile("Claculating size %d".format(size)) {
-          elements.size should be (numberOfTrees(size))
-        }
+//        forAll( elements ) { invariant(_) should be (true) }
+//
+//        profile("Claculating size %d".format(size)) {
+//          elements.size should be (numberOfTrees(size))
+//        }
       }
 
     }
@@ -94,7 +94,7 @@ class RedBlackTreesTest extends FunSuite with Matchers with GeneratorDrivenPrope
     val treesOfSize: Dependent[ (Int, Range, Set[Boolean], Int), Tree ] = Producer.memoized(
       ( pair: (Int, Range, Set[Boolean], Int) ) => {
         val (size, range, colors, blackHeight) = pair
-        info("got into construction with, size=%d, range=%s, colors=%s, black height=%s".format(size, range, colors, blackHeight))
+//        info("got into construction with, size=%d, range=%s, colors=%s, black height=%s".format(size, range, colors, blackHeight))
         assert(size >= 0, "size=%d, range=%s" format (size, range))
 
 //        if (size == 0 || range.size < 0 || colors.isEmpty || blackHeight < 0) e.Empty

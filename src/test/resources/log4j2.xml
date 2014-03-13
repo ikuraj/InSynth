@@ -21,7 +21,7 @@
     <logger name="insynth.streams.light" level="off" additivity="false">
       <appender-ref ref="Console" />
     </logger>
-    <logger name="insynth.streams.dependent" level="all" additivity="false">
+    <logger name="insynth.streams.dependent" level="info" additivity="false">
       <appender-ref ref="Console" />
     </logger>
     <logger name="insynth.testcases" level="all" additivity="false">
