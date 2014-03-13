@@ -39,3 +39,6 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
 )
+
+// micro-benchmarks
+libraryDependencies += "com.google.caliper" % "caliper" % "1.0-beta-1"
