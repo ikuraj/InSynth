@@ -6,6 +6,8 @@ organization := "ch.epfl.lara"
 
 scalaVersion := "2.10.3"
 
+scalaBinaryVersion := "2.10"
+
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature") 
 
 javacOptions += "-Xlint:unchecked"

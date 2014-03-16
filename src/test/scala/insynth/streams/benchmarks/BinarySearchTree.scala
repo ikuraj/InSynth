@@ -11,7 +11,7 @@ import streams.{ light => e }
 import util._
 import util.logging._
 
-object BinarySearchTreeBenchmark extends PerformanceTest.OfflineReport with HasLogger with ProfileLogger {
+class BinarySearchTreeBenchmark extends PerformanceTest.OfflineReport with HasLogger with ProfileLogger {
   import common._
   import Structures._
   import BSTrees._
