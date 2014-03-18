@@ -5,7 +5,7 @@ import scala.language.implicitConversions
 
 object Enum {
   
-  implicit def colToEnum[T](col: IndexedSeq[T])(implicit ct: ClassTag[T]) =
+  implicit def colToEnum[T](col: Seq[T])(implicit ct: ClassTag[T]) =
     apply(col)
     
   implicit def elemsToEnum[T](elems: T*)(implicit ct: ClassTag[T]) =
@@ -42,7 +42,7 @@ object Enum {
   
 }
 
-trait Enum[@specialized +A] {
+trait Enum[+A] {
   
   def size: Int
   
