@@ -2,7 +2,7 @@ package insynth.streams
 package light
 
 package object weight {
-  type IntegerWeightEnum[T] = WeightEnum[T, Int]
+  type IntegerWeightEnum[@specialized T] = WeightEnum[T, Int]
   
   type IntegerWeightPair[T] = (T, Int)
   

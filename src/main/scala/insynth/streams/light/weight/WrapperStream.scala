@@ -9,10 +9,9 @@ import insynth.streams.unordered.{ SingleStream => UnSingleStream }
  * Wrapper around the Scala stream
  * NOTE: parameter stream needs to be ordered itself
  */
-class WrapperStream[T](stream: Stream[(T, Int)])
-	extends IntegerWeightEnum[T] with Infinite[(T, Int)] {
+class WrapperStream[T](elements: Stream[T], weights: Stream[Int])
+	extends light.WrapperStream[T](elements) with IntegerWeightEnum[T] with Infinite[T] {
   
-  override def apply(ind: Int) = stream(ind)
-    
-  override def size = -1
+  def getWeight(ind: Int) = weights(ind)
+
 }

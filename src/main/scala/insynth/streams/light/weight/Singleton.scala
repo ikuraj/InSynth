@@ -2,12 +2,13 @@ package insynth.streams
 package light
 package weight
 
-class Singleton[T](pair: (T, Int)) extends WeightEnum[T, Int] with Finite[(T, Int)] {
+class Singleton[T](el: T, weight: Int) extends light.Singleton(el)
+	with WeightEnum[T, Int] with Finite[T] {
   
-  override def size = 1
+  def this(pair: (T, Int)) = this(pair._1 , pair._2)
   
-  override def apply(ind: Int) = 
-    if (ind == 0) pair
+  override def getWeight(ind: Int) =
+    if (ind == 0) weight
     else throw new NoSuchElementException("Singleton has only one element")
   
 }
