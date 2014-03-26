@@ -2,11 +2,11 @@ package insynth.streams
 package light
 package sampling
 
-trait Singleton[T] extends RandomSampler[T] {
+import scala.util.Random
+
+trait Singleton[T] extends light.Singleton[T] with Samplable[T] {
   
-  this: light.Singleton[T] =>
-  
-  def sample(sampler: () => Int) =
+  def sample(sampler: Random) =
     this.el
   
 }

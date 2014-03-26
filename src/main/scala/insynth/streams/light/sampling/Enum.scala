@@ -1,14 +1,14 @@
 package insynth.streams.light
 package sampling
 
+import scala.util.Random
+
 import scala.reflect._
 import scala.language.implicitConversions
 
-trait SamplableEnum[T] extends Samplable[T] with SamplableFun[T] {
-  
-  this: RandomSampler[T] =>
-      
-  def sample(sampler: () => Int) =
-    this.apply( sampler() )
+trait SamplableEnum[T] extends Enum[T] with Samplable[T] {
+        
+  def sample(sampler: Random) =
+    this.apply( sampler.nextInt(this.size) )
   
 }

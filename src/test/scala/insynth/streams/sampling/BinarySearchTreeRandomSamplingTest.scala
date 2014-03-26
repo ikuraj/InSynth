@@ -1,8 +1,10 @@
 package insynth
 package streams
-package dependent
+package light
+package sampling
 
 import streams.{ light => e }
+import streams.{ dependent => d }
 
 import util._
 import util.format._
@@ -56,21 +58,21 @@ class BinarySearchTreeRandomSamplingTest extends FunSuite	with
   import e._
 
   def produceEnum = {
-    val ranges = Producer( Enum( _: Range ) )
-    val sizes = Producer( (size: Int) => ranges( 0 until size ) )
+    val ranges = d.Producer( Samplable( _: Range ) )
+    val sizes = d.Producer( (size: Int) => ranges( 0 until size ) )
     
     Producer.memoized(
       (self: Dependent[(Int, Range), Tree], pair: (Int, Range)) => {
         val (size, range) = pair
     		info("(size, range)=" + pair)
 
-        if (size <= 0) e.Singleton(Leaf)
-        else if (size == 1) e.WrapperArray(range map { v => Node(Leaf, v, Leaf) })
+        if (size <= 0) Samplable(Leaf)
+        else if (size == 1) Samplable(range map { v => Node(Leaf, v, Leaf) })
         else {
           val roots = ranges(range)
           val leftSizes = sizes(size)
 
-          val rootLeftSizePairs = e.Binary(leftSizes, roots)
+          val rootLeftSizePairs = Binary(leftSizes, roots)
 
           val leftTrees: Dependent[(Int, Int), Tree] = new InMapper(self, { (par: (Int, Int)) =>
             val (leftSize, median) = par

@@ -1,5 +1,12 @@
 package insynth.streams
 package light
-package sampleable
+package sampling
 
-object Empty extends light.Empty
+import scala.util.Random
+
+object Empty extends light.Empty with Samplable[Nothing] {
+  
+  def sample(sampler: Random) =
+    throw new NoSuchElementException("no elements in Empty") 
+  
+}

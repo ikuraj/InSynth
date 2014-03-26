@@ -3,18 +3,20 @@ package light
 package sampling
 
 import insynth.util.logging._
-
 import dependent.BinaryFiniteCombineLazy
 
-trait BinaryChain[I, O, R] extends RandomSampler[R] with HasLogger {
+import scala.util.Random
+
+trait BinaryChain[I, O, R] extends Enum[R] with Samplable[R] with HasLogger {
   
-  this: BinaryFiniteCombineLazy[I, O, R] =>
+  this: BinaryFiniteCombineLazy[I, O, R] with Dependent[I, R] =>
     
-  def sample(sampler: Int => Int) = {
-    val firstLevelIndex = sampler( this.s1.size )
-    val secondLevelIndex = sampler ( this.s2.size )
+  def sample(sampler: Random) = {
+    val firstLevelIndex = sampler.nextInt( this.s1.size )
     
-    val innerEnum = s2( s1(firstLevelIndex) )
+    val innerEnum = this.getStream( s1(firstLevelIndex) )
+    
+    innerEnum.sample( sampler )
   }
   
 }
