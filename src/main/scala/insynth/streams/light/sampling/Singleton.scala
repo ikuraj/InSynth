@@ -4,9 +4,11 @@ package sampling
 
 import scala.util.Random
 
-trait Singleton[T] extends light.Singleton[T] with Samplable[T] {
+trait Singleton[T] extends SamplableEnum[T] {
   
-  def sample(sampler: Random) =
+  this: light.Singleton[T] =>
+  
+  override def sample(sampler: Random) =
     this.el
   
 }

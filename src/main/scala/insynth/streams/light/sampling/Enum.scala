@@ -6,9 +6,9 @@ import scala.util.Random
 import scala.reflect._
 import scala.language.implicitConversions
 
-trait SamplableEnum[T] extends Enum[T] with Samplable[T] {
+trait SamplableEnum[+T] extends Finite[T] with Samplable[T] {
         
-  def sample(sampler: Random) =
+  override def sample(sampler: Random) =
     this.apply( sampler.nextInt(this.size) )
   
 }

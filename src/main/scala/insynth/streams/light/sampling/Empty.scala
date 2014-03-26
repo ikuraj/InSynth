@@ -4,9 +4,9 @@ package sampling
 
 import scala.util.Random
 
-object Empty extends light.Empty with Samplable[Nothing] {
+object Empty extends light.Empty with SamplableEnum[Nothing] {
   
-  def sample(sampler: Random) =
+  override def sample(sampler: Random) =
     throw new NoSuchElementException("no elements in Empty") 
   
 }

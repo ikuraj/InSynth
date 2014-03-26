@@ -36,13 +36,13 @@ trait Memoized[I, O] extends Dependent[I, O] with Memoizable {
 object Producer {
   
   def apply[I, O](producerFunction: I => SamplableEnum[O]) =
-    new Producer(producerFunction) with Dependent[I, O]
+    new Producer(producerFunction)
   
   def apply[I, O](producerMap: Map[I, SamplableEnum[O]]) =
-    new Producer(producerMap) with Dependent[I, O]
+    new Producer(producerMap)
   
   def map[I, O](producerMap: Map[I, SamplableEnum[O]] = Map.empty) =
-    new Producer(producerMap) with Dependent[I, O]
+    new Producer(producerMap)
   
   def memoized[I, O](producerFunction: I => SamplableEnum[O])
     (implicit ms: MemoizationScope = null): Dependent[I, O] = {

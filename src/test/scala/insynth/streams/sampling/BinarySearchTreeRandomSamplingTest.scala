@@ -58,8 +58,8 @@ class BinarySearchTreeRandomSamplingTest extends FunSuite	with
   import e._
 
   def produceEnum = {
-    val ranges = d.Producer( Samplable( _: Range ) )
-    val sizes = d.Producer( (size: Int) => ranges( 0 until size ) )
+    val ranges: Dependent[Range, Int] = Producer( Samplable( _: Range ) )
+    val sizes = Producer( (size: Int) => ranges.getStream( 0 until size ) )
     
     Producer.memoized(
       (self: Dependent[(Int, Range), Tree], pair: (Int, Range)) => {
@@ -69,12 +69,12 @@ class BinarySearchTreeRandomSamplingTest extends FunSuite	with
         if (size <= 0) Samplable(Leaf)
         else if (size == 1) Samplable(range map { v => Node(Leaf, v, Leaf) })
         else {
-          val roots = ranges(range)
-          val leftSizes = sizes(size)
+          val roots = ranges.getStream(range)
+          val leftSizes = sizes.getStream(size)
 
-          val rootLeftSizePairs = Binary(leftSizes, roots)
+          val rootLeftSizePairs = new e.BinaryFinite(leftSizes, roots) with SamplableEnum[(Int, Int)]
 
-          val leftTrees: Dependent[(Int, Int), Tree] = new InMapper(self, { (par: (Int, Int)) =>
+          val leftTrees: Dependent[(Int, Int), Tree] = new d.InMapper(self, { (par: (Int, Int)) =>
             val (leftSize, median) = par
             (leftSize, range.start to (median - 1))
           })
