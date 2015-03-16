@@ -192,6 +192,22 @@ class RedBlackTreeTest extends FunSuite with ShouldMatchers {
     import Gen._  
     import RedBlackTrees._ 
     
+    for(currentSize <-
+        ((1 to 5) zip List(
+      		1, 2, 2, 3, 8, 14, 20, 35, 64, 122, 260, 586, 1296, 2708, 5400,
+      		10468, 19888, 37580, 71960, 140612, 279264, 560544, 1133760, 2310316,
+      		4750368, 9876264, 20788880, 44282696, 95241664, 206150208, 447470464,
+      		970862029, 2100029344    
+        ) zip
+          List(2, 7, 15, 36, 109))//.apply(5) :: Nil
+    ) {
+    
+//    println("Streamable is: " + FormatStreamUtils(streamable))
+    
+    implicit def anyToRBTree(a: Any) = a.asInstanceOf[Tree]
+      
+      val ((treeSize, correctNumber), neededTries) = currentSize
+      
     val leafNode = Injecter(classOf[Tree])
     val booleanNode = Injecter(classOf[Boolean])
     val intNode = Injecter(classOf[Int])
@@ -201,13 +217,13 @@ class RedBlackTreeTest extends FunSuite with ShouldMatchers {
     val filteredTrees = Filter(classOf[Cons], chooserNode)
     chooserNode.addStreamEl(consNode)
 
-    val streamFactory = new OrderedStreamFactory[Any]
+      val streamFactory = new OrderedStreamFactory[Any]
+  
+      val streamables = new StreamablesImpl(streamFactory)
 
-    val streamables = new StreamablesImpl(streamFactory)
-
-    val nilStream = Stream( (Leaf, 1) )
-    val intStream = (1 to 3) zip Stream.continually(1) toStream
-    val booleanStream = Stream(true, false) zip Stream.continually(1)
+      val nilStream = Stream( (Leaf, 1) )
+      val intStream = (1 to treeSize) zip Stream.continually(1) toStream
+      val booleanStream = Stream(true, false) zip Stream.continually(1)
     
     val streamable = streamables.getStreamable(
       filteredTrees,
@@ -218,28 +234,7 @@ class RedBlackTreeTest extends FunSuite with ShouldMatchers {
       Map(),
       Map( filteredTrees -> ( (e: Any) => invariant(e.asInstanceOf[Tree]) ) )
     )
-    
-    println("Streamable is: " + FormatStreamUtils(streamable))
-    
-    implicit def anyToRBTree(a: Any) = a.asInstanceOf[Tree]
-    
-    for(currentSize <- (1 to 6) zip List(
-  		1, 2, 2, 3, 8, 14, 20, 35, 64, 122, 260, 586, 1296, 2708, 5400,
-  		10468, 19888, 37580, 71960, 140612, 279264, 560544, 1133760, 2310316,
-  		4750368, 9876264, 20788880, 44282696, 95241664, 206150208, 447470464,
-  		970862029, 2100029344    
-    )) {
-      val (treeSize, correctNumber) = currentSize
       
-      
-	    val streamFactory = new OrderedStreamFactory[Any]
-	
-	    val streamables = new StreamablesImpl(streamFactory)
-	
-	    val nilStream = Stream( (Leaf, 1) )
-	    val intStream = (1 to treeSize) zip Stream.continually(1) toStream
-	    val booleanStream = Stream(true, false) zip Stream.continually(1)
-    
 	    val resultStream = streamables.getStreamPairs(
 	      filteredTrees,
 	      Map(),
@@ -253,18 +248,19 @@ class RedBlackTreeTest extends FunSuite with ShouldMatchers {
 	    var resList: List[(Any, Float)] = null
 	    def checkSize = (p: (Any, Float)) => RedBlackTrees.size(p._1.asInstanceOf[Tree]) == treeSize
       
-	    var foundAll = false
-	    var bound = -1
-	    for (toTake <- 1 to 1000; if !foundAll) {
-		    bound = toTake
-		    val startTime = System.currentTimeMillis
-		    resList = resultStream.take(toTake).toList
-		    val duration = System.currentTimeMillis - startTime
-
-		    foundAll = resList.count(checkSize) == correctNumber
-//		    println("Count of tree of size " + treeSize + " is: " +
-//	        resList.count(checkSize))
-	    }
+      val bound  = neededTries
+      
+//	    var foundAll = false
+//	    var bound = -1
+//	    for (toTake <- 1 to 1000; if !foundAll) {
+//		    bound = toTake
+//		    val startTime = System.currentTimeMillis
+//		    resList = resultStream.take(toTake).toList
+//		    val duration = System.currentTimeMillis - startTime
+//
+//		    foundAll = resList.count(checkSize) == correctNumber
+//	    }
+//      println("Count of tree of size " + treeSize + " is: " + bound)
 	        
 	    val startTime = System.currentTimeMillis
 	    resList = resultStream.take(bound).toList
@@ -274,7 +270,7 @@ class RedBlackTreeTest extends FunSuite with ShouldMatchers {
 	    resList.size should be (resList.map(_._1).distinct.size)
 	    
 	    resList.count(checkSize) should be (correctNumber)
-	    println("Tree size:" + currentSize)
+	    println("Tree size:" + currentSize + ", time:" + duration)
 	    
 //    val results = resList.filter( p => RedBlackTrees.size(p._1.asInstanceOf[Tree]) == treeSize )
     }
