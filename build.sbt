@@ -4,7 +4,7 @@ version := "1.3"
 
 organization := "ch.epfl.lara"
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.5"
 
 scalacOptions += "-deprecation"
 
@@ -27,6 +27,9 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta3"
 )
 
-seq(ScctPlugin.instrumentSettings : _*)
+//seq(ScctPlugin.instrumentSettings : _*)
 
-seq(com.github.theon.coveralls.CoverallsPlugin.coverallsSettings: _*)
+//coverageEnabled := true
+
+// temporary dependency issue
+//ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
