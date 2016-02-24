@@ -2,9 +2,9 @@
 language: scala
 #script: "sbt coveralls"
 jdk:
-- oraclejdk7
 - openjdk7
-- openjdk8
+- oraclejdk7
+- oraclejdk8
 scala:
 - 2.10.5
 branches:
