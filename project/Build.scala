@@ -16,7 +16,7 @@ object InSynth extends Build {
 		  }
 
   lazy val root = Project(
-    id = "InSynth",
+    id = "InSynth-engine",
     base = file("."),
     settings = Project.defaultSettings ++ Seq(mappingSetting)
   )
