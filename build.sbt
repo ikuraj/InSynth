@@ -1,10 +1,10 @@
 name := "InSynth"
 
-version := "2.1"
+version := "2.2"
 
 organization := "ch.epfl.lara"
 
-scalaVersion := "2.10.5"
+scalaVersion := "2.11.4"
 
 scalacOptions += "-deprecation"
 
