@@ -13,8 +13,12 @@ extends insynth.load.Declaration(inSynthType) {
   
   var isAbstract_ = false
   
-  def this(domainType: DomainType, name: String = "testDeclaration", weight: Weight = 1.0f) =
+  def this(domainType: DomainType, name: String, weight: Weight) =
     this(domainType, domainType.toSuccinctType, name, weight) 
+ 
+  def this(domainType: DomainType) =
+    this(domainType, domainType.toSuccinctType, "testDeclaration", 1.0f) 
+
   
   override def getSimpleName = name + ":" + domainType.toString// +
   	//"(" + inSynthType.toString + ")" + weight
@@ -36,7 +40,7 @@ object TestDeclaration {
     new TestDeclaration(domainType, "testDeclaration", weight)
   
   def apply(domainType: DomainType, name: String) =
-    new TestDeclaration(domainType, name)
+    new TestDeclaration(domainType, name, 1.0f)
   
   def apply(domainType: DomainType) =
     new TestDeclaration(domainType)

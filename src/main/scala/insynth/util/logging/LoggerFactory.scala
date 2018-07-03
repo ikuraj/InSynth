@@ -2,8 +2,8 @@ package insynth.util.logging
 
 import scala.collection.mutable.{ Map => MutableMap }
 
-import com.typesafe.scalalogging.log4j.{ Logger => ScalaLogger }
-import org.apache.logging.log4j.LogManager
+//import com.typesafe.scalalogging.log4j.{ Logger => ScalaLogger }
+//import org.apache.logging.log4j.LogManager
 
 /** 
  * Factory for producing loggers
@@ -26,11 +26,11 @@ object LoggerFactory {
   final def newLogger(hasLogger: HasLogger) = {
     val className = hasLogger.getMyClass.getName
     
-    if (className contains "insynth.streams")
-      new ScalaLog4jLogger(ScalaLogger(LogManager.getLogger(className))) with HashCodeOutput
-    else
-    	new ScalaLog4jLogger(ScalaLogger(LogManager.getLogger(className)))
-    //(new DummyLogger, null)
+//    if (className contains "insynth.streams")
+//      new ScalaLog4jLogger(ScalaLogger(LogManager.getLogger(className))) with HashCodeOutput
+//    else
+//    	new ScalaLog4jLogger(ScalaLogger(LogManager.getLogger(className)))
+    new DummyLogger
   }
 
 }
