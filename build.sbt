@@ -36,5 +36,3 @@ packageMainLogConfig := false
 
 // temporary dependency issue
 //ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
-
-EclipseKeys.useProjectId := true
