@@ -1,6 +1,6 @@
 package insynth.streams
 
-import insynth.util.logging.HasLogger
+import org.sietf.logging.HasLogger
 
 trait AddStreamable[+T] {
   def addStreamable[U >: T](s: Streamable[U])

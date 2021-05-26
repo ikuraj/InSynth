@@ -5,7 +5,7 @@ import insynth.structures.{ SuccinctType => Type }
 import insynth.query.Query
 
 import insynth.util.TimeOut
-import insynth.util.logging.HasLogger
+import org.sietf.logging.HasLogger
 
 class Engine(builder:InitialEnvironmentBuilder, query: Query, scheduler:Scheduler, timeout:TimeOut) extends HasLogger {
   assert(builder != null && query != null && scheduler != null && timeout != null)

@@ -3,7 +3,7 @@ package insynth.reconstruction.stream
 import insynth.streams._
 import insynth.streams.ordered._
 
-import insynth.util.logging.HasLogger
+import org.sietf.logging.HasLogger
 
 class OrderedStreamFactory[T] extends StreamFactory[T] with HasLogger {
   

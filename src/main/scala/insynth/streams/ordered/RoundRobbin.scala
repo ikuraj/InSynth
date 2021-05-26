@@ -2,7 +2,7 @@ package insynth.streams.ordered
 
 import scala.collection.mutable.{ Seq => MutableSeq }
 
-import insynth.util.logging._
+import org.sietf.logging.HasLogger
 import insynth.streams.{ OrderedStreamable => Streamable }
 import insynth.streams.unordered.{ RoundRobbin => UnRoundRobbin }
 

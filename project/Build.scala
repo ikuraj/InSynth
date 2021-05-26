@@ -16,9 +16,15 @@ object InSynth extends Build {
 		  }
 
   lazy val root = Project(
-    id = "InSynth-engine",
-    base = file("."),
-    settings = Project.defaultSettings ++ Seq(mappingSetting)
-  )
+      id = "InSynth-engine",
+      base = file("."),
+      settings = Project.defaultSettings ++ Seq(mappingSetting)
+    ).
+      dependsOn(loggingHelpers % "compile->compile;test->test")
+
+  // might require something like: git config --global url."git@github.mit.edu".insteadOf git://github.mit.edu
+  lazy val loggingHelpers = ProjectRef(
+    uri("git://github.mit.edu:ivanko/logging-helpers.git"),
+    "logging-helpers")
 
 }
