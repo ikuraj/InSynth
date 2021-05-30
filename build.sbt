@@ -31,8 +31,28 @@ libraryDependencies ++= Seq(
 
 //coverageEnabled := true
 
+// temporary dependency issue
+//ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
+
+val packageMainLogConfig = settingKey[Boolean]("The version of Scala used for building.")
+
 // default setting excludes packaging main logging config file
 packageMainLogConfig := false
 
-// temporary dependency issue
-//ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
+(Compile / packageBin / mappings) ++= {
+  if (packageMainLogConfig.value)
+    Seq((baseDirectory.value / "res" / "log4j2.xml") -> "resources/log4j2.xml")
+  else
+    Nil
+}
+
+lazy val root = Project(
+    id = "InSynth-engine",
+    base = file(".")
+  ).
+    dependsOn(loggingHelpers % "compile->compile;test->test")
+
+// might require something like: git config --global url."git@github.mit.edu".insteadOf git://github.mit.edu
+lazy val loggingHelpers = ProjectRef(
+  uri("git://github.mit.edu:ivanko/logging-helpers.git"),
+  "logging-helpers")
