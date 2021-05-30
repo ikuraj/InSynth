@@ -4,7 +4,7 @@ version := "2.1"
 
 organization := "ch.epfl.lara"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.13"
 
 scalacOptions += "-deprecation"
 
@@ -14,7 +14,7 @@ scalacOptions += "-feature"
 
 javacOptions += "-Xlint:unchecked"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 
 libraryDependencies += "junit" % "junit" % "4.8" % "test"
 
@@ -47,12 +47,8 @@ packageMainLogConfig := false
 }
 
 lazy val root = Project(
-    id = "InSynth-engine",
-    base = file(".")
-  ).
-    dependsOn(loggingHelpers % "compile->compile;test->test")
+  id = "InSynth-engine",
+  base = file(".")
+)
 
-// might require something like: git config --global url."git@github.mit.edu".insteadOf git://github.mit.edu
-lazy val loggingHelpers = ProjectRef(
-  uri("git://github.mit.edu:ivanko/logging-helpers.git"),
-  "logging-helpers")
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
