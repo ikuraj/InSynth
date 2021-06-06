@@ -46,9 +46,9 @@ packageMainLogConfig := false
     Nil
 }
 
-lazy val root = Project(
-  id = "InSynth-engine",
-  base = file(".")
-)
+//lazy val root = Project(
+// id = "InSynth-engine",
+//  base = file(".")
+//)
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
