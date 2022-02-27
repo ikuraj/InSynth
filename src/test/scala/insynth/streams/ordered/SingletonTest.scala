@@ -1,7 +1,6 @@
 package insynth.streams.ordered
 
 import scala.util.Random
-
 import org.scalatest.FunSpec
 import org.scalatest.GivenWhenThen
 
@@ -20,18 +19,18 @@ class SingletonTest extends FunSpec with GivenWhenThen {
       
 	    val stream = streamable.getStream
       And("the head of its stream should be the Given value")	    
-	    expectResult(randomInt) {
+	    assertResult(randomInt) {
         stream.head
       } 
 	    
       And("its tail should be empty")     
-	    expectResult(Nil) { stream.tail }
+	    assertResult(Nil) { stream.tail }
       
       And("the similar should hold for its values")      
-	    expectResult(1) {
+	    assertResult(1) {
         streamable.getValues.head
       } 
-	    expectResult(Nil) { streamable.getValues.tail }
+	    assertResult(Nil) { streamable.getValues.tail }
     }
     
   }

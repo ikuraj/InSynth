@@ -6,6 +6,8 @@ organization := "ch.epfl.lara"
 
 scalaVersion := "2.11.8"
 
+lazy val supportedScalaVersions = List("2.11.8", "2.13.1")
+
 scalacOptions += "-deprecation"
 
 scalacOptions += "-unchecked"
@@ -14,7 +16,7 @@ scalacOptions += "-feature"
 
 javacOptions += "-Xlint:unchecked"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 
 libraryDependencies += "junit" % "junit" % "4.8" % "test"
 
@@ -31,19 +33,24 @@ libraryDependencies ++= Seq(
 
 //coverageEnabled := true
 
-// default setting excludes packaging main logging config file
-//packageMainLogConfig := false
-
 // temporary dependency issue
 //ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
-//EclipseKeys.useProjectId := true
+val packageMainLogConfig = settingKey[Boolean]("The version of Scala used for building.")
 
-//(Compile, packageBin) / mappings ++=
-//  ((baseDirectory, packageMainLogConfig) map { (base, setting) =>
-//    if (setting)
-//      Seq((base / "res" / "log4j2.xml") -> "resources/log4j2.xml")
-//    else
-//      Nil
-//  }).value
+// default setting excludes packaging main logging config file
+packageMainLogConfig := false
 
+(Compile / packageBin / mappings) ++= {
+  if (packageMainLogConfig.value)
+    Seq((baseDirectory.value / "res" / "log4j2.xml") -> "resources/log4j2.xml")
+  else
+    Nil
+}
+
+//lazy val root = Project(
+// id = "InSynth-engine",
+//  base = file(".")
+//)
+
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"

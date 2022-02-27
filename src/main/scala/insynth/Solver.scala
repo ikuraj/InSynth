@@ -5,10 +5,9 @@ import insynth.engine._
 import insynth.query._
 import insynth.engine.scheduler.WeightScheduler
 import insynth.structures.ContainerNode
-
 import insynth.util.TimeOut
-import insynth.util.logging.HasLogger
 import insynth.util.format.TreePrinter
+import org.sietf.logging.HasLogger
 
 /**
  * Main class for the synthesis process invocation

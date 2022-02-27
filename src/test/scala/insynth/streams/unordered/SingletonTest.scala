@@ -22,12 +22,12 @@ class SingletonTest extends FunSpec with GivenWhenThen {
       
 	    val stream = streamable.getStream
       And("the head of its stream should be the Given value")	    
-	    expectResult(randomInt) {
+	    assertResult(randomInt) {
         stream.head
       } 
 	    
       And("its tail should be empty")     
-	    expectResult(Nil) { stream.tail }
+	    assertResult(Nil) { stream.tail }
     }
     
   }

@@ -21,7 +21,7 @@ import insynth.{ structures => env }
 import insynth.structures.{ Function => FunctionType, Node => _, Variable => _, _ }
 import insynth.load.Declaration
 
-import insynth.util.logging.HasLogger
+import org.sietf.logging.HasLogger
 import insynth.util.FreshNameGenerator
 import insynth.util.format._
 

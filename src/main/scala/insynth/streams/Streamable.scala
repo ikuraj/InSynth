@@ -1,6 +1,6 @@
 package insynth.streams
 
-import insynth.util.logging.HasLogger
+import org.sietf.logging.HasLogger
 
 trait Streamable[+T] extends HasLogger {
   

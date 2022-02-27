@@ -2,7 +2,7 @@ package insynth.streams.ordered
 
 import scala.collection.mutable.{ ArrayBuffer, LinkedList => MutableList, HashMap => MutableMap, HashSet => MutableSet }
 
-import insynth.util.logging._
+import org.sietf.logging.HasLogger
 import insynth.streams.{ OrderedStreamable => Streamable }
 
 class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])

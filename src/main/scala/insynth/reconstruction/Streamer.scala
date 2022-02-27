@@ -4,7 +4,7 @@ import insynth.structures.{ SimpleNode, Weight }
 import insynth.reconstruction.stream.{ Node => LambdaNode, _ }
 
 import insynth.util.format.{ FormatSuccinctNode, FormatStreamUtils }
-import insynth.util.logging.HasLogger
+import org.sietf.logging.HasLogger
 import insynth.util._
 
 /**

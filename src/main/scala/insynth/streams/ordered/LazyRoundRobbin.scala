@@ -2,7 +2,7 @@ package insynth.streams.ordered
 
 import insynth.streams._
 
-import insynth.util.logging.HasLogger
+import org.sietf.logging.HasLogger
 
 class LazyRoundRobbin[T](val initStreamsIn: List[OrderedStreamable[T]])
 	extends OrderedStreamable[T] with AddStreamable[T] with HasLogger {
