@@ -32,9 +32,18 @@ libraryDependencies ++= Seq(
 //coverageEnabled := true
 
 // default setting excludes packaging main logging config file
-packageMainLogConfig := false
+//packageMainLogConfig := false
 
 // temporary dependency issue
 //ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
-EclipseKeys.useProjectId := true
+//EclipseKeys.useProjectId := true
+
+//(Compile, packageBin) / mappings ++=
+//  ((baseDirectory, packageMainLogConfig) map { (base, setting) =>
+//    if (setting)
+//      Seq((base / "res" / "log4j2.xml") -> "resources/log4j2.xml")
+//    else
+//      Nil
+//  }).value
+
