@@ -4,9 +4,9 @@ version := "2.1"
 
 organization := "ch.epfl.lara"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.12"
 
-lazy val supportedScalaVersions = List("2.11.8", "2.13.1")
+lazy val supportedScalaVersions = List("2.11.12", "2.13.1")
 
 scalacOptions += "-deprecation"
 
@@ -16,7 +16,7 @@ scalacOptions += "-feature"
 
 javacOptions += "-Xlint:unchecked"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
 libraryDependencies += "junit" % "junit" % "4.8" % "test"
 
