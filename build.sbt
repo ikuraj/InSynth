@@ -48,10 +48,16 @@ packageMainLogConfig := false
     Nil
 }
 
-//lazy val root = Project(
-// id = "InSynth-engine",
-//  base = file(".")
-//)
+lazy val root = Project(
+    id = "InSynth-engine",
+    base = file(".")
+  ).
+  dependsOn(loggingHelpers % "compile->compile;test->test")
+
+// might require something like: git config --global url."git@github.mit.edu".insteadOf git://github.mit.edu
+lazy val loggingHelpers = ProjectRef(
+  uri("git://github.mit.edu:ivanko/logging-helpers.git"),
+  "core")
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 
