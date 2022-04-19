@@ -2,7 +2,7 @@ package insynth.streams.unordered
 
 import scala.util.Random
 
-import org.scalatest.junit.JUnitSuite
+
 import org.junit.Assert._
 import org.junit.Test
 
@@ -11,7 +11,7 @@ import insynth.streams.Streamable
 // enable implicit conversions
 import scala.language.implicitConversions
 
-class BinaryStreamTest extends JUnitSuite {    
+class BinaryStreamTest {
   
   def printStream[A](stream: Stream[A])(n: Int) = stream.take(n).toList mkString (", ")
    

@@ -1,13 +1,13 @@
 package insynth.util.streams.ordered
 
 import insynth._
-import insynth.testdomain._
 import insynth.common._
-
+import insynth.testdomain._
 import org.scalatest._
-import org.scalatest.matchers._
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class SolverTest extends FunSpec with GivenWhenThen with Matchers {
+class SolverTest extends AnyFunSpec with GivenWhenThen with Matchers {
   
   import CommonDeclarations._
   import CommonDomainTypes._

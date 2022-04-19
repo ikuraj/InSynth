@@ -2,11 +2,11 @@ package insynth.streams.ordered
 
 import scala.util.Random
 
-import org.scalatest.junit.JUnitSuite
+
 import org.junit.Assert._
 import org.junit.{ Test, Ignore }
 
-class LazyRoundRobbinTest extends JUnitSuite {
+class LazyRoundRobbinTest {
 
   val rnd = new Random(System.currentTimeMillis())
 
@@ -33,12 +33,12 @@ class LazyRoundRobbinTest extends JUnitSuite {
   @Ignore("lazy stream at this point needs to evaluate all needed values to compare")
   def testRoundRobinLoopEvaluationNoThrow {
 //    val lazyPair = ((throw new RuntimeException), 2)
-//    
+//
 //    val innerStream = (1, 1) #:: lazyPair #:: Stream[(Int, Int)]()
-    
+
     val stream1 = getSingleStream(0)
     val stream2 = RoundRobbin(Seq(Singleton[Int](throw new RuntimeException)))
-    
+
     val lrr = LazyRoundRobbin(List(stream1))
 
     lrr addStreamable UnaryStream(lrr, (x: Int) => x + 1 )
@@ -140,7 +140,7 @@ class LazyRoundRobbinTest extends JUnitSuite {
 
     val us = UnaryStream(rr, { (_: Int) + 1 }, Option({ (_: Int) + 1 }))
     val ss2 = getSingleStream(5)
-    
+
     rr addStreamable us
     rr addStreamable ss2
 
@@ -149,12 +149,12 @@ class LazyRoundRobbinTest extends JUnitSuite {
     val stream = rr.getStream
 
     val solutionsList = List(1, 2, 2, 3, 3, 4, 4, 5, 5, 5)
-    
+
     lazy val message = streamToString(rr.getStream)(10)
 
     assertEquals(message, solutionsList, stream.take(solutionsList.size))
   }
-  
+
   @Test
   def testLazyRoundRobbinNoLoop5 {
     val streams = List(
@@ -165,7 +165,7 @@ class LazyRoundRobbinTest extends JUnitSuite {
 
     val us = UnaryStream(rr, { (_: Int) + 1 }, Option({ (_: Int) + 1 }))
     val ss2 = getSingleStream(2)
-    
+
     rr addStreamable us
     rr addStreamable ss2
 
@@ -174,7 +174,7 @@ class LazyRoundRobbinTest extends JUnitSuite {
     val stream = rr.getStream
 
     val solutionsList = List(1, 2, 2, 3, 3, 4, 4, 5, 5, 5)
-    
+
     lazy val message = streamToString(rr.getStream)(10)
 
     assertEquals(message, solutionsList, stream.take(solutionsList.size))

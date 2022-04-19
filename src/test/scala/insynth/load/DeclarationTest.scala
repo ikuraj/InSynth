@@ -1,12 +1,11 @@
 package insynth.load
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
-
 import insynth.testdomain._
 import insynth.common._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class DeclarationTest extends FunSuite with Matchers {
+class DeclarationTest extends AnyFunSuite with Matchers {
   
   import CommonDeclarations._
   val dt = CommonDomainTypes

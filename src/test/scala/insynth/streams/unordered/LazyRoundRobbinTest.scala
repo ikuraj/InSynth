@@ -2,13 +2,13 @@ package insynth.streams.unordered
 
 import scala.util.Random
 
-import org.scalatest.junit.JUnitSuite
+
 import org.junit.Assert._
 import org.junit.Test
 
 import insynth.streams.Streamable
 
-class LazyRoundRobbinTest extends JUnitSuite {
+class LazyRoundRobbinTest {
   
   val rnd = new Random(System.currentTimeMillis())
 

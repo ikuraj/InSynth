@@ -16,11 +16,15 @@ scalacOptions += "-feature"
 
 javacOptions += "-Xlint:unchecked"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.9"
 
-libraryDependencies += "junit" % "junit" % "4.8" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % Test
 
-libraryDependencies += "com.novocode" % "junit-interface" % "0.10-M3" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest-funspec" % "3.2.9" % Test
+
+libraryDependencies += "com.github.sbt" % "junit-interface" % "0.12" % Test
+
+libraryDependencies += "junit" % "junit" % "4.12" % Test
 
 // logging facilities
 libraryDependencies ++= Seq(

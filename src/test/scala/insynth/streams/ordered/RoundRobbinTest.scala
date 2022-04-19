@@ -2,11 +2,11 @@ package insynth.streams.ordered
 
 import scala.util.Random
 
-import org.scalatest.junit.JUnitSuite
+
 import org.junit.Assert._
 import org.junit.Test
 
-class RoundRobbinTest extends JUnitSuite {
+class RoundRobbinTest {
 
   import Utils._
 
@@ -127,7 +127,7 @@ class RoundRobbinTest extends JUnitSuite {
 
   @Test
   def testRoundRobbin6 {
-    
+
       val finiteStream1 = List(3).toStream
       val finiteStream2 = List(1).toStream
       val finiteStream3 = List(2).toStream
@@ -145,12 +145,12 @@ class RoundRobbinTest extends JUnitSuite {
       assertEquals(3, stream.size)
 
       assertEquals(List(1, 2, 3), stream.take(3))
-    
+
   }
 
   @Test
   def testRoundRobbin7 {
-    
+
       // cannot be singletons (they return 1 by default)
       //	    val streamable1: Streamable[Int] = Singleton(2)
       //	    val streamable2: Streamable[Int] = Singleton(3)
@@ -172,12 +172,12 @@ class RoundRobbinTest extends JUnitSuite {
       assertEquals(3, stream.size)
 
       assertEquals(List(1, 2, 3), stream.take(3))
-    
+
   }
 
   @Test
   def testRoundRobbin8 {
-    
+
       val streamable1 = getSingleStream(1)
       val streamable2 = getSingleStream(2)
 
@@ -189,7 +189,7 @@ class RoundRobbinTest extends JUnitSuite {
 
       assertEquals(List(1), stream.take(1))
       assertEquals(1, stream.iterator.next)
-    
+
   }
 
 }

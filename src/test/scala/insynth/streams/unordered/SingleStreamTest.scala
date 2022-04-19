@@ -1,12 +1,10 @@
 package insynth.streams.unordered
 
 import scala.util.Random
-
-import org.scalatest.FunSuite
-
 import insynth.streams.Streamable
+import org.scalatest.funsuite.AnyFunSuite
 
-class SingleStreamTest extends FunSuite {    
+class SingleStreamTest extends AnyFunSuite {
   
   def printStream[A](stream: Stream[A])(n: Int) = stream.take(n).toList mkString (", ")
   

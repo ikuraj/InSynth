@@ -2,11 +2,10 @@ package insynth.streams.ordered
 
 import scala.util.Random
 
-import org.scalatest.junit.JUnitSuite
 import org.junit.Assert._
 import org.junit.Test
 
-class UnaryStreamTest extends JUnitSuite {
+class UnaryStreamTest {
   
   import Utils.getSingleStream
     

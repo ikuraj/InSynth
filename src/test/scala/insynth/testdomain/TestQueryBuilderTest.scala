@@ -1,17 +1,15 @@
 package insynth.testdomain
 
 import scala.util.Random
-
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
-
 import insynth.structures._
 import insynth.common._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
 // enable implicit conversions
 import scala.language.implicitConversions
 
-class TestQueryBuilderTest extends FunSuite with Matchers {
+class TestQueryBuilderTest extends AnyFunSuite with Matchers {
   
   import CommonDomainTypes._
   import CommonDeclarations._

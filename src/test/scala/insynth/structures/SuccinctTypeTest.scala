@@ -1,11 +1,11 @@
 package insynth.structures
 
-import org.scalatest.junit.JUnitSuite
+
 
 import org.junit.Assert._
 import org.junit.Test
 
-class SuccinctTypeTest extends JUnitSuite {
+class SuccinctTypeTest {
   
   @Test
   def testTree1 {

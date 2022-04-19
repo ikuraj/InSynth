@@ -2,11 +2,11 @@ package insynth.streams.unordered
 
 import scala.util.Random
 
-import org.scalatest.junit.JUnitSuite
+
 import org.junit.Assert._
 import org.junit.Test
 
-class ScalaStreamTest extends JUnitSuite {    
+class ScalaStreamTest {
   
   def printStream[A](stream: Stream[A])(n: Int) = stream.take(n).toList mkString (", ")
   

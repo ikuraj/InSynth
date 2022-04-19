@@ -2,11 +2,11 @@ package insynth.streams.ordered
 
 import scala.util.Random
 
-import org.scalatest.junit.JUnitSuite
+
 import org.junit.Assert._
 import org.junit.Test
 
-class StreamCombinationsTest extends JUnitSuite {
+class StreamCombinationsTest {
 
   val rnd = new Random(System.currentTimeMillis())
 
@@ -82,7 +82,7 @@ class StreamCombinationsTest extends JUnitSuite {
 
     rr.initialize
 
-    rr.getValues.take(6)    
+    rr.getValues.take(6)
     val streamString = streamToString(rr.getStream zip rr.getValues)(6)
     assertTrue("Stream string: " + streamString, List.empty != (rr.getStream zip rr.getValues take 6))
   }
@@ -225,7 +225,7 @@ class StreamCombinationsTest extends JUnitSuite {
         yield i * 3 + j * 5
 
     val streamList = stream.take(randomValue).distinct
-        
+
     val computedList = computedSeq.sortWith(_ < _).take(randomValue).distinct.take(streamList.size).toList
 
     assertEquals(streamString, computedList.size, streamList.size)

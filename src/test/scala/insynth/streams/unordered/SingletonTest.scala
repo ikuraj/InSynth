@@ -1,13 +1,11 @@
 package insynth.streams.unordered
 
 import scala.util.Random
-
-import org.scalatest.FunSpec
 import org.scalatest.GivenWhenThen
-
 import insynth.streams.Streamable
+import org.scalatest.funspec.AnyFunSpec
 
-class SingletonTest extends FunSpec with GivenWhenThen {    
+class SingletonTest extends AnyFunSpec with GivenWhenThen {
   
   describe("A Singleton") {
     
