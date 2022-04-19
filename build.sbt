@@ -54,3 +54,5 @@ packageMainLogConfig := false
 //)
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+
+libraryDependencies += "es.weso" % "document_2.13" % "0.0.19"

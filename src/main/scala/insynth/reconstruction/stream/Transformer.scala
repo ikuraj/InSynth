@@ -7,7 +7,6 @@ import scala.language.postfixOps
 
 import scala.collection.mutable.{
   Map => MutableMap,
-  LinkedList => MutableList,
   Set => MutableSet,
   Stack
 }

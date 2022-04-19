@@ -1,6 +1,6 @@
 package insynth.util.format
 
-import scala.text._
+import es.weso.document._
 
 import insynth.streams.Streamable
 import insynth.streams.unordered._

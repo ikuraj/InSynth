@@ -1,6 +1,6 @@
 package insynth.util.format
 
-import scala.text.Document._
+import es.weso.document._
     
 import insynth.structures._
 
@@ -12,7 +12,7 @@ class FormatSuccinctType(tpe: SuccinctType) extends Formatable {
   
   override def toDocument = toDocument(tpe)
   
-  def toDocument(tpe: SuccinctType): scala.text.Document = {    
+  def toDocument(tpe: SuccinctType): Document = {
     tpe match {
       case Const(name) => name
       case Arrow(TSet(paramList), returnType) => 

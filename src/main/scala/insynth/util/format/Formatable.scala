@@ -3,9 +3,8 @@ package insynth.util.format
 // enable implicit conversions
 import scala.language.implicitConversions
 
-import scala.text.Document
+import es.weso.document._
 import Document._
-import scala.text.DocNil
 
 trait Formatable {
   def toDocument: Document
