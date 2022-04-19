@@ -4,9 +4,9 @@ version := "2.1"
 
 organization := "ch.epfl.lara"
 
-scalaVersion := "2.11.12"
+scalaVersion := "2.13.6"
 
-lazy val supportedScalaVersions = List("2.11.12", "2.13.1")
+lazy val supportedScalaVersions = List("2.11.12", "2.13.6")
 
 scalacOptions += "-deprecation"
 
