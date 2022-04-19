@@ -1,7 +1,6 @@
 package insynth.streams.unordered
 
 import insynth.streams.Streamable
-import scala.collection.immutable.Stream.consWrapper
 
 /**
  * binary stream takes elements from two streams and combines them into new elements, the progress

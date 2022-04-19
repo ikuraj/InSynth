@@ -1,7 +1,5 @@
 package insynth.streams.unordered
 
-import scala.collection.mutable.{ LinkedList => MutableList }
-
 import insynth.streams.Streamable
 
 // can specialize for infinity to be more efficient
@@ -30,8 +28,7 @@ class RoundRobbin[T](val streams: Seq[Streamable[T]]) extends Streamable[T] {
   
   // iterators that track the positions in each stream
   // hidden so it looks as functional
-  // TODO make this an array
-  protected var _iterators: MutableList[Iterator[T]] = MutableList.fill(streams.size)(null)
+  protected var _iterators: Array[Iterator[T]] = Array.fill(streams.size)(null)
   // NOTE cannot do this because InitializingRoundRobbin is constructing RoundRobbin and it may
   // not have eager evaluations
   //private lazy val _iterators: Seq[Iterator[T]] = streams map { _.getStream.iterator }

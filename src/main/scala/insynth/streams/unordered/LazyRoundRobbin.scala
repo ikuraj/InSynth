@@ -1,8 +1,6 @@
 package insynth.streams.unordered
 
-import scala.collection.mutable.{ Map => MutableMap, LinkedList => MutableList, Set => MutableSet }
-
-import insynth.streams.{ Streamable, AddStreamable }
+import insynth.streams.{AddStreamable, Streamable}
 
 /**
  * encapsulates round robbin and initialized when all streams are gathered

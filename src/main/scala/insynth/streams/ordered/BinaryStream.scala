@@ -1,6 +1,6 @@
 package insynth.streams.ordered
 
-import scala.collection.mutable.{ ArrayBuffer, LinkedList => MutableList, HashMap => MutableMap, HashSet => MutableSet }
+import scala.collection.mutable.{ ArrayBuffer, HashMap => MutableMap, HashSet => MutableSet }
 
 import org.sietf.logging.HasLogger
 import insynth.streams.{ OrderedStreamable => Streamable }
@@ -33,7 +33,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
    *  for left/right position and increase right/left */ 
   var iterators = ArrayBuffer[BufferedIterator[(U, Int)]]()
   /** In each enumeration step we can add new iterators - they are added only in the getMinIterator call */
-  var iteratorsToBeAdded = MutableList[BufferedIterator[(U, Int)]]()
+  var iteratorsToBeAdded = List[BufferedIterator[(U, Int)]]()
   
   /** Keep track of indexes which are incremented for each combination of (isLeft?, fixedIndex) */
   var indexesToCheck: MutableMap[(Boolean, Int), Int] = MutableMap.empty
@@ -297,7 +297,7 @@ class BinaryStream[T, V, U](val s1: Streamable[T], val s2: Streamable[V])
     //var minIt: BufferedIterator[(U, Int)] = iterators(minInd)
             
     iterators appendAll iteratorsToBeAdded
-    iteratorsToBeAdded = MutableList.empty
+    iteratorsToBeAdded = Nil
     
     var ind = 0
     while(ind < iterators.size) {
